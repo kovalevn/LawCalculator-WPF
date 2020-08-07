@@ -1,0 +1,329 @@
+﻿<Window x:Class="LawCalculator_WPF.MainWindow"
+        x:Name="MainWind"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:LawCalculator_WPF"
+        xmlns:System="clr-namespace:System;assembly=mscorlib"
+        mc:Ignorable="d"
+        Title="LawCalculator" Height="700" Width="450" WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <local:PaymentsOnDateConverter x:Key="paymentsOnDateConverter"/>
+        <local:GeneralPaymentConverter x:Key="generalPaymentConverter"/>
+        <ObjectDataProvider x:Key="currencyType" MethodName="GetValues" ObjectType="{x:Type System:Enum}">
+            <ObjectDataProvider.MethodParameters>
+                <x:Type TypeName="local:CurrencyType"/>
+            </ObjectDataProvider.MethodParameters>
+        </ObjectDataProvider>
+
+        <Style TargetType="Expander">
+            <EventSetter Event="Expanded" Handler="Expander_Expanded"/>
+        </Style>
+        <Style TargetType="Label">
+            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+            <Setter Property="BorderBrush" Value="LightGray"/>
+            <Setter Property="Margin" Value="5"/>
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Margin" Value="5"/>
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Margin" Value="5"/>
+        </Style>
+        <Style TargetType="DatePicker">
+            <Setter Property="Margin" Value="5"/>
+        </Style>
+        <Style TargetType="TextBlock">
+            <Setter Property="Margin" Value="5"/>
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="5"/>
+        </Style>
+        <Style TargetType="ListBox">
+            <Setter Property="Margin" Value="5"/>
+        </Style>
+        <Style TargetType="GroupBox">
+            <Setter Property="BorderBrush" Value="Black"/>
+            <Setter Property="Background" Value="WhiteSmoke"/>
+        </Style>
+        <Style x:Key="Headers">
+            <Setter Property="Control.HorizontalAlignment" Value="Center" />
+            <Setter Property="Control.BorderThickness" Value="0,0,0,1" />
+            <Setter Property="Control.BorderBrush" Value="Black" />
+            <Setter Property="TextBoxBase.IsReadOnly" Value="True" />
+            <Setter Property="ItemsControl.Background">
+                <Setter.Value>
+                    <SolidColorBrush Color="LightGray" Opacity="0.3"/>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <TabControl>
+            <TabItem Header="Проекты">
+                <TabItem.Content>
+                    <ScrollViewer>
+                        <StackPanel x:Name="ProjectsPanel">
+                            <TextBox x:Name="SearchBox" Width="156" HorizontalAlignment="Left"/>
+                            <CheckBox x:Name="ShowToPayBox" Content="Показать только к выплате" Margin="5"/>
+                            <ItemsControl x:Name="ProjectsControl" ItemsSource="{Binding AllProjects}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Expander Header="{Binding Path=Name}" Margin="0,0,0,5" Expanded="Expander_Expanded">
+                                            <GroupBox HorizontalAlignment="Left">
+                                                <StackPanel x:Name="newProjectPanel" HorizontalAlignment="Left">
+                                                    <UniformGrid Columns="2">
+                                                        <Button Content="Редактировать" HorizontalAlignment="Left"/>
+                                                        <Button Name="makePaymentsButton" Content="Произвести выплату" HorizontalAlignment="Right" Click="makePaymentsButton_Click"/>
+                                                    </UniformGrid>
+                                                    <DockPanel Margin="0,0,0,20">
+                                                        <Label Content="Валюта проекта:" DockPanel.Dock="Left"/>
+                                                        <ComboBox x:Name="projectCurrency" ItemsSource="{Binding Source={StaticResource currencyType}}" 
+                                                                  SelectedItem="{Binding ProjectCurrency, Mode=TwoWay}" DockPanel.Dock="Right"/>
+                                                    </DockPanel>
+                                                    <TextBox Text="Originator" Style="{StaticResource Headers}"/>
+                                                    <UniformGrid Columns="3" Margin="0,0,0,20">
+                                                        <Label Content="Originating Partner"/>
+                                                        <Label Content="Проценты"/>
+                                                        <Label Content="К выплате"/>
+                                                        <ComboBox ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.AllPartners}" DisplayMemberPath="Name" SelectedValue="{Binding OriginatingPartner}"/>
+                                                        <TextBox x:Name="originatingPartnerPercent"  PreviewTextInput="NumberValidationTextBox" Text="{Binding OriginatingPartnerPercent, Mode=TwoWay}" MaxLength="2"/>
+                                                        <!--<ComboBox ItemsSource="{Binding OriginatorMoney}" SelectedIndex="{Binding ElementName=projectCurrency, Path=SelectedIndex, Mode=OneWay}"/>-->
+                                                        <TextBox MinWidth="20" IsReadOnly="True">
+                                                            <TextBox.Text>
+                                                                <MultiBinding Converter="{StaticResource generalPaymentConverter}">
+                                                                    <Binding Path="Payments" Mode="OneWay"/>
+                                                                    <Binding ElementName="projectCurrency" Path="SelectedItem" Mode="OneWay"/>
+                                                                    <Binding ElementName="originatingPartnerPercent" Path="Text" Mode="OneWay"/>
+                                                                    <Binding Path="Payments.Count" Mode="OneWay"/>
+                                                                </MultiBinding>
+                                                            </TextBox.Text>
+                                                        </TextBox>
+                                                    </UniformGrid>
+
+                                                    <TextBox Text="Managing Partner" Style="{StaticResource Headers}"/>
+                                                    <UniformGrid Columns="3" Margin="0,0,0,20">
+                                                        <Label Content="Managing Partner"/>
+                                                        <Label Content="Проценты"/>
+                                                        <Label Content="К выплате"/>
+                                                        <ComboBox ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.AllPartners}" DisplayMemberPath="Name" SelectedValue="{Binding ManagingPartner}"/>
+                                                        <TextBox x:Name="managingPartnerPercent" PreviewTextInput="NumberValidationTextBox" Text="{Binding ManagingPartnerPercent, Mode=TwoWay}" MaxLength="2"/>
+                                                        <!--<ComboBox ItemsSource="{Binding ManagerMoney}" SelectedIndex="{Binding ElementName=projectCurrency, Path=SelectedIndex, Mode=OneWay}"/>-->
+                                                        <TextBox MinWidth="20" IsReadOnly="True">
+                                                            <TextBox.Text>
+                                                                <MultiBinding Converter="{StaticResource generalPaymentConverter}">
+                                                                    <Binding Path="Payments" Mode="OneWay"/>
+                                                                    <Binding ElementName="projectCurrency" Path="SelectedItem" Mode="OneWay"/>
+                                                                    <Binding ElementName="managingPartnerPercent" Path="Text" Mode="OneWay"/>
+                                                                    <Binding Path="Payments.Count" Mode="OneWay"/>
+                                                                </MultiBinding>
+                                                            </TextBox.Text>
+                                                        </TextBox>
+                                                    </UniformGrid>
+
+                                                    <TextBox Text="Юристы" Style="{StaticResource Headers}"/>
+                                                    <UniformGrid Columns="3">
+                                                        <Label Content="Юристы"/>
+                                                        <Label Content="Проценты"/>
+                                                        <Label Content="К выплате"/>
+                                                    </UniformGrid>
+                                                    <ItemsControl ItemsSource="{Binding Lawyers}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <UniformGrid Columns="3">
+                                                                    <UniformGrid.Resources>
+                                                                        <local:LawyerPercentConverter x:Key="lawyerPercentConverter"/>
+                                                                    </UniformGrid.Resources>
+                                                                    <TextBox Text="{Binding Name}" IsReadOnly="True"/>
+                                                                    <ComboBox IsEditable="True" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.AllLawyers}" DisplayMemberPath="Name" Visibility="Collapsed"/>
+                                                                    <TextBox x:Name="lawyerPercent" MinWidth="20" PreviewTextInput="NumberValidationTextBox" MaxLength="2">
+                                                                        <TextBox.Text>
+                                                                            <MultiBinding Converter="{StaticResource lawyerPercentConverter}">
+                                                                                <Binding Path="LawyersProjects" Mode="OneWay"/>
+                                                                                <Binding Path="DataContext" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type Expander}}" Mode="OneWay"/>
+                                                                            </MultiBinding>
+                                                                        </TextBox.Text>
+                                                                    </TextBox>
+                                                                    <TextBox IsReadOnly="True" MinWidth="20">
+                                                                        <TextBox.Text>
+                                                                            <MultiBinding Converter="{StaticResource generalPaymentConverter}">
+                                                                                <Binding Path="DataContext.Payments" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type Expander}}" Mode="OneWay"/>
+                                                                                <Binding ElementName="projectCurrency" Path="SelectedItem" Mode="OneWay"/>
+                                                                                <Binding ElementName="lawyerPercent" Path="Text" Mode="OneWay"/>
+                                                                                <Binding Path="DataContext.Payments.Count" RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType={x:Type Expander}}" Mode="OneWay"/>
+                                                                            </MultiBinding>
+                                                                        </TextBox.Text>
+                                                                    </TextBox>
+                                                                </UniformGrid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+
+                                                    <GroupBox Margin="0,10,0,0">
+                                                        <DockPanel Margin="0,5,0,5">
+                                                            <Label Content="Добавить юриста:" DockPanel.Dock="Left"/>
+                                                            <ComboBox x:Name="AddLawyerToProjectBox" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.AllLawyers}" IsEditable="True" DisplayMemberPath="Name" SelectedIndex="0" DockPanel.Dock="Left"/>
+                                                            <Button Tag="{Binding ElementName=AddLawyerToProjectBox, Path=SelectedItem}" Content="Добавить" Click="AddLawyerToProject_Click" DockPanel.Dock="Right"/>
+                                                        </DockPanel>
+                                                    </GroupBox>
+
+                                                    <TextBox Text="Платежи" Style="{StaticResource Headers}" Margin="0,20,0,0"/>
+                                                    <UniformGrid Columns="3">
+                                                        <Label Content="Сумма"/>
+                                                        <Label Content="Дата"/>
+                                                        <Label Content="Валюта"/>
+                                                    </UniformGrid>
+                                                    <ItemsControl ItemsSource="{Binding Payments}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <UniformGrid Columns="3">
+                                                                    <TextBox Text="{Binding Amount, StringFormat={}{0:N0}}"/>
+                                                                    <TextBox Text="{Binding DateString, Mode=OneWay}"/>
+                                                                    <TextBox Text="{Binding Currency}"/>
+                                                                </UniformGrid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </GroupBox>
+                                        </Expander>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem.Content>
+            </TabItem>
+            <TabItem Header="Юристы">
+                <TabItem.Content>
+                    <ScrollViewer>
+                        <StackPanel>
+                            <ItemsControl x:Name="LawyersPanel" ItemsSource="{Binding AllLawyers}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Expander Header="{Binding Path=Name}" Margin="0,0,0,5">
+                                            <GroupBox HorizontalAlignment="Left">
+                                                <StackPanel x:Name="newLawyerPanel" HorizontalAlignment="Left">
+
+                                                    <TextBox Text="Имя:" Style="{StaticResource Headers}"/>
+                                                    <TextBox Text="{Binding Name, Mode=TwoWay}"/>
+
+                                                    <TextBox Text="Зарплата:" Margin="0,20,0,0" Style="{StaticResource Headers}"/>
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <TextBox Text="{Binding Path=Salary, Mode=TwoWay, StringFormat={}{0:N0}}" Margin="5,0,0,0"/>
+                                                        <TextBox Text="₽" IsReadOnly="True" Margin="0,0,0,0" BorderThickness="0,1,1,1"/>
+                                                    </StackPanel>
+
+                                                    <TextBox Text="Участвует в проектах:" Margin="0,20,0,0" Style="{StaticResource Headers}"/>
+                                                    <ListBox ItemsSource="{Binding LawyersProjects, Mode=OneWay}" DisplayMemberPath="Name"/>
+
+                                                    <TextBox Text="Выплаты:" Margin="0,20,0,0" Style="{StaticResource Headers}"/>
+                                                    <DatePicker x:Name="paymentDatePicker" SelectedDateFormat="Short" SelectedDate="{x:Static System:DateTime.Now}"/>
+                                                    <UniformGrid Columns="4">
+                                                        <Label Content="Сумма"/>
+                                                        <Label Content="Валюта"/>
+                                                        <Label Content="Дата"/>
+                                                        <Label Content="Проект"/>
+                                                    </UniformGrid>
+                                                    <ItemsControl>
+                                                        <ItemsControl.ItemsSource>
+                                                            <MultiBinding Converter="{StaticResource paymentsOnDateConverter}">
+                                                                <Binding ElementName="paymentDatePicker" Path="SelectedDate" Mode="OneWay"/>
+                                                                <Binding Path="LawyersProjects" Mode="OneWay"/>
+                                                            </MultiBinding>
+                                                        </ItemsControl.ItemsSource>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <UniformGrid Columns="4">
+                                                                    <TextBox Text="{Binding Amount, StringFormat={}{0:N0}}"/>
+                                                                    <TextBox Text="{Binding Currency}"/>
+                                                                    <TextBox Text="{Binding DateString, Mode=OneWay}"/>
+                                                                    <TextBox Text="{Binding ProjectName}"/>
+                                                                </UniformGrid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </GroupBox>
+                                        </Expander>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button x:Name="AddLawyer" Content="Добавить" HorizontalAlignment="Left" Click="AddLawyer_Click"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem.Content>
+            </TabItem>
+            <TabItem Header="Партнёры">
+                <TabItem.Content>
+                    <ScrollViewer>
+                        <StackPanel>
+                            <ItemsControl x:Name="PartnersPanel" ItemsSource="{Binding AllPartners}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel/>
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Expander Header="{Binding Path=Name}" Margin="0,0,0,5">
+                                            <GroupBox HorizontalAlignment="Left">
+                                                <StackPanel x:Name="newPartnerPanel" HorizontalAlignment="Left">
+
+                                                    <TextBox Text="Имя:" Style="{StaticResource Headers}"/>
+                                                    <TextBox Text="{Binding Name, Mode=TwoWay}"/>
+
+                                                    <TextBox Text="Участвует в проектах:" Margin="0,20,0,0" Style="{StaticResource Headers}"/>
+                                                    <ListBox ItemsSource="{Binding LawyersProjects, Mode=OneWay}" DisplayMemberPath="Name"/>
+
+                                                    <TextBox Text="Выплаты:" Margin="0,20,0,0" Style="{StaticResource Headers}"/>
+                                                    <DatePicker x:Name="paymentDatePicker" SelectedDateFormat="Short" SelectedDate="{x:Static System:DateTime.Now}"/>
+                                                    <UniformGrid Columns="4">
+                                                        <Label Content="Сумма"/>
+                                                        <Label Content="Валюта"/>
+                                                        <Label Content="Дата"/>
+                                                        <Label Content="Проект"/>
+                                                    </UniformGrid>
+                                                    <ItemsControl>
+                                                        <ItemsControl.ItemsSource>
+                                                            <MultiBinding Converter="{StaticResource paymentsOnDateConverter}">
+                                                                <Binding ElementName="paymentDatePicker" Path="SelectedDate" Mode="OneWay"/>
+                                                                <Binding Path="LawyersProjects" Mode="OneWay"/>
+                                                            </MultiBinding>
+                                                        </ItemsControl.ItemsSource>
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <UniformGrid Columns="4">
+                                                                    <TextBox Text="{Binding Amount, StringFormat={}{0:N0}}"/>
+                                                                    <TextBox Text="{Binding Currency}"/>
+                                                                    <TextBox Text="{Binding DateString, Mode=OneWay}"/>
+                                                                    <TextBox Text="{Binding ProjectName}"/>
+                                                                </UniformGrid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
+                                            </GroupBox>
+                                        </Expander>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                            <Button x:Name="AddPartner" Content="Добавить" HorizontalAlignment="Left" Click="AddPartner_Click"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                </TabItem.Content>
+            </TabItem>
+        </TabControl>
+    </Grid>
+</Window>

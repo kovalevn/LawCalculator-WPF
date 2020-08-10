@@ -23,8 +23,7 @@ namespace LawCalculator_WPF
                     }
                 }
             }
-            if (AllPaymentsOnDate.Count > 0) return AllPaymentsOnDate;
-            else return new ObservableCollection<Payment>() { new Payment() { Amount = 0 } };
+            return AllPaymentsOnDate;
         }
 
         public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)

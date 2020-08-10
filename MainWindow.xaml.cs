@@ -483,6 +483,27 @@ namespace LawCalculator_WPF
             (DataContext as LCViewModel).AllPartners.Add(new Partner("Без имени"));
         }
 
+        private void AddOriginatorToProject_Click(object sender, RoutedEventArgs e)
+        {
+            ((sender as Button).DataContext as Project).AddPartner((sender as Button).Tag as Partner);
+            (sender as Button).Visibility = Visibility.Collapsed;
+            ((sender as Button).DataContext as Project).OriginatorVisibilityTrigger = Visibility.Visible;
+        }
+
+        private void AddManagerToProject_Click(object sender, RoutedEventArgs e)
+        {
+            ((sender as Button).DataContext as Project).AddPartner((sender as Button).Tag as Partner);
+            (sender as Button).Visibility = Visibility.Collapsed;
+            ((sender as Button).DataContext as Project).ManagerVisibilityTrigger = Visibility.Visible;
+        }
+
+        //private void EditOriginator_Click(object sender, RoutedEventArgs e)
+        //{
+        //    ((sender as Button).DataContext as Project).RemovePartner((sender as Button).Tag as Partner);
+        //    (sender as Button).Visibility = Visibility.Collapsed;
+        //    (DataContext as LCViewModel).OriginatorVisibilityTrigger = Visibility.Visible;
+        //}
+
         //private void GetInfoFromSpreadsheet()
         //{
         //    var sheetAdress = new FileInfo(@"C:\Users\Никита\Desktop\Проекты\LawCalculator WPF\Движение по счетам_2020_.xlsx");

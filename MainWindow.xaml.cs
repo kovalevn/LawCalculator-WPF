@@ -458,7 +458,9 @@ namespace LawCalculator_WPF
 
         private void AddLawyer_Click(object sender, RoutedEventArgs e)
         {
-            (DataContext as LCViewModel).AllLawyers.Add(new Lawyer("Без имени", 0));
+            Lawyer newLawyer = new Lawyer("Без имени", 0);
+            (DataContext as LCViewModel).AllLawyers.Add(newLawyer);
+            SqliteDataAccess.SaveLawyers(newLawyer);
         }
 
         private void makePaymentsButton_Click(object sender, RoutedEventArgs e)

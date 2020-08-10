@@ -40,6 +40,8 @@ namespace LawCalculator_WPF
             Clarke.AddMoney(10000, CurrencyType.Rouble);
             Clarke.AddMoney(10000, CurrencyType.Rouble, DateTime.Today.AddMonths(-4));
 
+            AllLawyers.Add(SqliteDataAccess.LoadLawyers("Lawyers")[0]);
+
             AllProjects.Add(Clarke);
 
             AllPartners.Add(Kovalev);

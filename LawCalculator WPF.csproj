@@ -8,11 +8,29 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="EPPlus" Version="5.1.1" />
+    <None Remove="Images\checkmark.png" />
+    <None Remove="LawCalculatorDB.db" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="LawCalculatorDB.db">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.0.35" />
+    <PackageReference Include="EPPlus" Version="5.2.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="3.1.6" />
+    <PackageReference Include="System.Data.SQLite" Version="1.0.113.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Images\checkmark.png" />
   </ItemGroup>
 
 </Project>

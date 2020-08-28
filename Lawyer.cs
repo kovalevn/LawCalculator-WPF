@@ -7,8 +7,10 @@ namespace LawCalculator_WPF
 {
     class Lawyer
     {
+        public int Id { get; set; }
         public string Name { get; set; }
         public int Salary { get; set; }
+        public ICollection<Project> Project { get; set; }
         public ObservableCollection<LawyersProject> LawyersProjects { get; set; } = new ObservableCollection<LawyersProject>();
 
         //public Dictionary<string, SuccessAndProject> Projects = new Dictionary<string, SuccessAndProject>();

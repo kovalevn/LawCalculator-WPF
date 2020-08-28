@@ -44,9 +44,9 @@ namespace LawCalculator_WPF
             Lawyer Ivan = new Lawyer("Иван", 60000);
             Lawyer Roman = new Lawyer("Роман", 80000);
 
-            Clarke.AddLawyer(Ivan, 5);
-            Clarke.AddLawyer(Roman, 7);
-            Clarke.RemoveLawyer(Ivan);
+            //Clarke.AddLawyer(Ivan, 5);
+            //Clarke.AddLawyer(Roman, 7);
+            //Clarke.RemoveLawyer(Ivan);
 
             AllProjects.Add(Clarke);
 
@@ -460,7 +460,6 @@ namespace LawCalculator_WPF
         {
             Lawyer newLawyer = new Lawyer("Без имени", 0);
             (DataContext as LCViewModel).AllLawyers.Add(newLawyer);
-            SqliteDataAccess.SaveLawyers(newLawyer);
         }
 
         private void makePaymentsButton_Click(object sender, RoutedEventArgs e)
@@ -475,7 +474,12 @@ namespace LawCalculator_WPF
             //Lawyer lawyer = new Lawyer(((sender as Button).Tag as Lawyer).Name, 0);
             bool doNotAddLawyer = false;
             foreach (Lawyer lawyer in ((sender as Button).DataContext as Project).Lawyers) if (lawyer.Name == ((sender as Button).Tag as Lawyer).Name) doNotAddLawyer = true;
-            if (!doNotAddLawyer) ((sender as Button).DataContext as Project).AddLawyer((sender as Button).Tag as Lawyer, 0);
+            if (!doNotAddLawyer)
+            {
+                ((sender as Button).DataContext as Project).AddLawyer((sender as Button).Tag as Lawyer, 0);
+                //LawyerContext.UpdateLawyer((sender as Button).Tag as Lawyer);
+                //LawyerContext.UpdateProject((sender as Button).DataContext as Project);
+            }
             else MessageBox.Show("Этот юрист уже участвует в данном проекте");
             
         }
@@ -497,6 +501,16 @@ namespace LawCalculator_WPF
             ((sender as Button).DataContext as Project).AddPartner((sender as Button).Tag as Partner);
             (sender as Button).Visibility = Visibility.Collapsed;
             ((sender as Button).DataContext as Project).ManagerVisibilityTrigger = Visibility.Visible;
+        }
+
+        private void UploadFromSpreadsheetButton_Click(object sender, RoutedEventArgs e)
+        {
+            (DataContext as LCViewModel).GetInfoFromSpreadsheet();
+        }
+
+        private void MakeAllPaymentsButton_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (Project project in (DataContext as LCViewModel).AllProjects) project.PayMoney();
         }
 
         //private void EditOriginator_Click(object sender, RoutedEventArgs e)

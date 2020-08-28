@@ -78,6 +78,10 @@
                         <StackPanel x:Name="ProjectsPanel">
                             <TextBox x:Name="SearchBox" Width="156" HorizontalAlignment="Left"/>
                             <CheckBox x:Name="ShowToPayBox" Content="Показать только к выплате" Margin="5"/>
+                            <UniformGrid Columns="2">
+                                <Button x:Name="UploadFromSpreadsheetButton" Content="Выгрузить из таблицы" Click="UploadFromSpreadsheetButton_Click"/>
+                                <Button x:Name="MakeAllPaymentsButton" Content="Произвести все выплаты" Click="MakeAllPaymentsButton_Click"/>
+                            </UniformGrid>
                             <ItemsControl x:Name="ProjectsControl" ItemsSource="{Binding AllProjects}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>

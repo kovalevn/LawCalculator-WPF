@@ -2,28 +2,18 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using System.Windows;
 
 namespace LawCalculator_WPF
 {
-    class Project : IComparable, INotifyPropertyChanged
+    class Project : IComparable, INotifyPropertyChanged, IEquatable<Project>
     {
+        public int Id { get; set; }
         public string Name { get; set; }
         public CurrencyType ProjectCurrency { get; set; }
-
-        public double MoneyDollar { get; private set; }
-        public double MoneyRouble { get; private set; }
-        public double MoneyEuro { get; private set; }
-        public double MoneyDollarCashless { get; private set; }
-        public double MoneyRoubleCashless { get; private set; }
-        public double MoneyEuroCashless { get; private set; }
-
-        public List<double> Money { get; set; } = new List<double>();
-        public ObservableCollection<string> OriginatorMoney { get; set; } = new ObservableCollection<string>();
-        public ObservableCollection<string> ManagerMoney { get; set; } = new ObservableCollection<string>();
-        public List<ObservableCollection<string>> LawyersMoney { get; set; } = new List<ObservableCollection<string>>();
 
         public Partner OriginatingPartner { get; set; }
         public int OriginatingPartnerPercent { get; set; } = 20;
@@ -84,6 +74,18 @@ namespace LawCalculator_WPF
             ManagerVisibilityTrigger = Visibility.Collapsed;
         }
 
+        public Project() { }
+
+        public Project(string name, bool sucsess) 
+        {
+            this.Name = name;
+            isSuccess = sucsess;
+            ManagingPartnerPercent = isSuccess ? 40 : 25;
+
+            OriginatorVisibilityTrigger = Visibility.Collapsed;
+            ManagerVisibilityTrigger = Visibility.Collapsed;
+        }
+
         #region Старые методы подсчёта денег
 
         public void CountMoneyOld()
@@ -97,14 +99,14 @@ namespace LawCalculator_WPF
             bool setCurrency = true;
             foreach (Payment pay in Payments)
             {
-                if (DateTime.Compare(pay.Date, DateTime.Today.AddMonths(-3)) <= 0 && !pay.Payed)
+                if (pay.ToPay)
                 {
                     if (setCurrency)
                     {
                         ProjectCurrency = pay.Currency;
                         setCurrency = false;
                     }
-                    pay.ToPay = true;
+                    //pay.ToPay = true;
                     //            if (pay.Currency == CurrencyType.Dollar) MoneyDollar += pay.Amount;
                     //            if (pay.Currency == CurrencyType.Rouble) MoneyRouble += pay.Amount;
                     //            if (pay.Currency == CurrencyType.Euro) MoneyEuro += pay.Amount;
@@ -112,7 +114,7 @@ namespace LawCalculator_WPF
                     //            if (pay.Currency == CurrencyType.RoubleCashless) MoneyRoubleCashless += pay.Amount;
                     //            if (pay.Currency == CurrencyType.EuroCashless) MoneyEuroCashless += pay.Amount;
                 }
-                else pay.ToPay = false;
+                //else pay.ToPay = false;
             }
 
             //    Money = new List<double> { MoneyDollar, MoneyRouble, MoneyEuro, MoneyDollarCashless, MoneyRoubleCashless, MoneyEuroCashless };
@@ -175,6 +177,7 @@ namespace LawCalculator_WPF
                 PayedPayments.Add(pay);
                 Payments.Remove(pay);
             }
+            LawyerContext.UpdateProject(this);
         }
 
         public static double CountMoneyOfCurrency(ObservableCollection<Payment> payments, CurrencyType currencyType)
@@ -184,7 +187,7 @@ namespace LawCalculator_WPF
             return moneyToAdd;
         }
 
-        private void AddMoneyToLawyersProjects(Lawyer lawyer, float percent)
+        private void AddMoneyToLawyersProjects(Partner lawyer, float percent)
         {
             LawyersProject thisProject = new LawyersProject();
             foreach (LawyersProject project in lawyer.LawyersProjects)
@@ -198,7 +201,7 @@ namespace LawCalculator_WPF
             //Для каждого вида валюты складываем все платежи c соответствующей валютой, умножаем на процент юриста и добавляем платёж
             if (percent <= 0)
             {
-                MessageBox.Show($"Юристу {lawyer.Name} не указан процент. Для проведения выплаты укажите проценты всем юристам");
+                MessageBox.Show($"Партнёру {lawyer.Name} не указан процент. Для проведения выплаты укажите проценты всем юристам");
                 return;
             }
             foreach (CurrencyType currency in Enum.GetValues(typeof(CurrencyType)))
@@ -206,7 +209,7 @@ namespace LawCalculator_WPF
                 double moneyToAdd = CountMoneyOfCurrency(Payments, currency);
                 if (moneyToAdd > 0) thisProject.Payments.Add(new Payment() { Amount = percent * moneyToAdd / 100, Date = DateTime.Today, Currency = currency, ProjectName = Name });
             }
-            foreach (Payment payment in thisProject.Payments) MessageBox.Show($"{payment.Amount.ToString()} {payment.Currency} получил {lawyer.Name} по проекту {payment.ProjectName}");
+            //foreach (Payment payment in thisProject.Payments) MessageBox.Show($"{payment.Amount.ToString()} {payment.Currency} получил {lawyer.Name} по проекту {payment.ProjectName}");
         }
 
         private void AddMoneyToLawyersProjects(Lawyer lawyer)
@@ -231,7 +234,8 @@ namespace LawCalculator_WPF
                 double moneyToAdd = CountMoneyOfCurrency(Payments, currency);
                 if (moneyToAdd > 0) thisProject.Payments.Add(new Payment() { Amount = thisProject.Percent * moneyToAdd / 100, Date = DateTime.Today, Currency = currency, ProjectName = Name });
             }
-            foreach (Payment payment in thisProject.Payments) MessageBox.Show($"{payment.Amount.ToString()} {payment.Currency} получил {lawyer.Name} по проекту {payment.ProjectName}");
+            LawyerContext.UpdateLawyer(lawyer);
+            //foreach (Payment payment in thisProject.Payments) MessageBox.Show($"{payment.Amount.ToString()} {payment.Currency} получил {lawyer.Name} по проекту {payment.ProjectName}");
         }
 
         public void AddMoney(int amount, CurrencyType currency)
@@ -252,6 +256,8 @@ namespace LawCalculator_WPF
             //lawyer.Projects.Add(this.Name, new SuccessAndProject(success, this)); //(new Project(name, OriginatingPartner, ManagingPartner, isSuccess) { lawyersPercentInProject = success });
             lawyer.LawyersProjects.Add(new LawyersProject(Name) { Percent = success });
             Lawyers.Add(lawyer);
+            LawyerContext.UpdateLawyer(lawyer);
+            LawyerContext.UpdateProject(this);
         }
 
         public void RemoveLawyer(Lawyer lawyer)
@@ -311,6 +317,21 @@ namespace LawCalculator_WPF
             {
                 PropertyChanged(this, new PropertyChangedEventArgs(name));
             }
+        }
+
+        public bool Equals(Project other)
+        {
+            return null != other && Id == other.Id;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as Project);
+        }
+
+        public override int GetHashCode()
+        {
+            return Id;
         }
     }
 }

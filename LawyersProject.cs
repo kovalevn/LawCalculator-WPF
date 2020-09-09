@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LawCalculator_WPF
 {
-    class LawyersProject : IEquatable<LawyersProject>
+    class LawyersProject : IEquatable<LawyersProject>, IHaveId
     {
         public int Id { get; set; }
         public string Name { get; set; }

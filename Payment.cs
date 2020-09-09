@@ -7,7 +7,7 @@ namespace LawCalculator_WPF
 {
     public enum CurrencyType { Dollar, Rouble, Euro, DollarCashless, RoubleCashless, EuroCashless }
 
-    class Payment : IEquatable<Payment>
+    class Payment : IEquatable<Payment>, IHaveId
     {
         public int Id { get; set; }
         public double Amount { get; set; }

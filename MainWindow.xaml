@@ -9,8 +9,11 @@
         mc:Ignorable="d"
         Title="LawCalculator" Height="700" Width="450" WindowStartupLocation="CenterScreen">
     <Window.Resources>
+        <local:PaymentsSumConverter x:Key="paymentsSumConverter"/>
+        <local:PartnerPaymentsSumConverter x:Key="partnerPaymentsSumConverter"/>
         <local:PaymentsOnDateConverter x:Key="paymentsOnDateConverter"/>
         <local:GeneralPaymentConverter x:Key="generalPaymentConverter"/>
+        <local:ReverseVisibilityConverter x:Key="reverseVisibilityConverter"/>
         <local:NumberToBoolConverter x:Key="numberToBoolConverter" Inverted="False"/>
         <local:NumberToBoolConverter x:Key="numberToBoolConverterInverted" Inverted="True"/>
         <ObjectDataProvider x:Key="currencyType" MethodName="GetValues" ObjectType="{x:Type System:Enum}">
@@ -107,8 +110,8 @@
                                                         <Label Content="Originating Partner"/>
                                                         <Label Content="Проценты"/>
                                                         <Label Content="К выплате"/>
-                                                        <ComboBox x:Name="originatingPartnerBox" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.AllPartners}" DisplayMemberPath="Name" SelectedValue="{Binding OriginatingPartner}" Visibility="{Binding ElementName=saveOrigPartButton, Path=Visibility}"/>
-                                                        <TextBox Text="{Binding ElementName=originatingPartnerBox, Path=SelectedItem.Name}" IsReadOnly="True" Visibility="{Binding OriginatorVisibilityTrigger}"/>
+                                                        <ComboBox x:Name="originatingPartnerBox" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.AllPartners}" DisplayMemberPath="Name" Visibility="{Binding ElementName=saveOrigPartButton, Path=Visibility}"/>
+                                                        <TextBox x:Name="originatingPartnerTextBox" Text="{Binding OriginatingPartner.Name}" IsReadOnly="True" Visibility="{Binding OriginatorVisibilityTrigger}"/>
                                                         <TextBox x:Name="originatingPartnerPercent" PreviewTextInput="NumberValidationTextBox" Text="{Binding OriginatingPartnerPercent, Mode=TwoWay}" MaxLength="2"/>
                                                         <!--<ComboBox ItemsSource="{Binding OriginatorMoney}" SelectedIndex="{Binding ElementName=projectCurrency, Path=SelectedIndex, Mode=OneWay}"/>-->
                                                         <TextBox MinWidth="20" IsReadOnly="True">
@@ -121,7 +124,7 @@
                                                                 </MultiBinding>
                                                             </TextBox.Text>
                                                         </TextBox>
-                                                        <Button x:Name="saveOrigPartButton" Click="AddOriginatorToProject_Click" Tag="{Binding ElementName=originatingPartnerBox, Path=SelectedItem}" Content="OK"/>
+                                                        <Button x:Name="saveOrigPartButton" Click="AddOriginatorToProject_Click" Tag="{Binding ElementName=originatingPartnerBox, Path=SelectedItem}" Content="OK" Visibility="{Binding ElementName=originatingPartnerTextBox, Path=Visibility, Converter={StaticResource reverseVisibilityConverter}}"/>
                                                         <!--<Button x:Name="editOrigPartButton" Click="EditOriginator_Click" Content="Изменить" Tag="{Binding ElementName=originatingPartnerBox, Path=SelectedItem}" Visibility="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.OriginatorVisibilityTrigger}"/>-->
                                                     </UniformGrid>
 
@@ -130,8 +133,8 @@
                                                         <Label Content="Managing Partner"/>
                                                         <Label Content="Проценты"/>
                                                         <Label Content="К выплате"/>
-                                                        <ComboBox x:Name="managingPartnerBox" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.AllPartners}" DisplayMemberPath="Name" SelectedValue="{Binding ManagingPartner}" Visibility="{Binding ElementName=saveManagPartButton, Path=Visibility}"/>
-                                                        <TextBox Text="{Binding ElementName=managingPartnerBox, Path=SelectedItem.Name}" IsReadOnly="True" Visibility="{Binding ManagerVisibilityTrigger}"/>
+                                                        <ComboBox x:Name="managingPartnerBox" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.AllPartners}" DisplayMemberPath="Name" Visibility="{Binding ElementName=saveManagPartButton, Path=Visibility}"/>
+                                                        <TextBox x:Name="managingPartnerTextBox" Text="{Binding ManagingPartner.Name}" IsReadOnly="True" Visibility="{Binding ManagerVisibilityTrigger}"/>
                                                         <TextBox x:Name="managingPartnerPercent" PreviewTextInput="NumberValidationTextBox" Text="{Binding ManagingPartnerPercent, Mode=TwoWay}" MaxLength="2"/>
                                                         <!--<ComboBox ItemsSource="{Binding ManagerMoney}" SelectedIndex="{Binding ElementName=projectCurrency, Path=SelectedIndex, Mode=OneWay}"/>-->
                                                         <TextBox MinWidth="20" IsReadOnly="True">
@@ -144,7 +147,7 @@
                                                                 </MultiBinding>
                                                             </TextBox.Text>
                                                         </TextBox>
-                                                        <Button x:Name="saveManagPartButton" Click="AddManagerToProject_Click" Content="ОК" Tag="{Binding ElementName=managingPartnerBox, Path=SelectedItem}"/>
+                                                        <Button x:Name="saveManagPartButton" Click="AddManagerToProject_Click" Content="ОК" Tag="{Binding ElementName=managingPartnerBox, Path=SelectedItem}" Visibility="{Binding ElementName=managingPartnerTextBox, Path=Visibility, Converter={StaticResource reverseVisibilityConverter}}"/>
                                                     </UniformGrid>
 
                                                     <TextBox Text="Юристы" Style="{StaticResource Headers}"/>
@@ -211,6 +214,7 @@
                                                             </DataTemplate>
                                                         </ItemsControl.ItemTemplate>
                                                     </ItemsControl>
+                                                    <Button x:Name="SaveProject" Content="Сохранить" Click="SaveProject_Click"/>
                                                 </StackPanel>
                                             </GroupBox>
                                         </Expander>
@@ -276,6 +280,32 @@
                                                         </ItemsControl.ItemTemplate>
                                                     </ItemsControl>
                                                     <Label Content="В выбранном месяце выплат не производилось" Visibility="{Binding ElementName=lawyersPayments, Path=ItemsSource.Count, Converter={StaticResource numberToBoolConverterInverted}, Mode=OneWay}"/>
+                                                    <TextBox Text="Баланс в этом месяце:" Margin="0,20,0,0" Style="{StaticResource Headers}"/>
+                                                    <UniformGrid Columns="2">
+                                                        <Label Content="Rouble"/>
+                                                        <TextBox IsReadOnly="True">
+                                                            <TextBox.Text>
+                                                                <MultiBinding Converter="{StaticResource paymentsSumConverter}">
+                                                                    <Binding RelativeSource="{RelativeSource Mode=Self}" Path="DataContext" Mode="OneWay"/>
+                                                                    <Binding ElementName="paymentDatePicker" Path="SelectedDate" Mode="OneWay"/>
+                                                                </MultiBinding>
+                                                            </TextBox.Text>
+                                                        </TextBox>
+                                                    </UniformGrid>
+                                                    <TextBox Text="Всего за год:" Margin="0,20,0,0" Style="{StaticResource Headers}"/>
+                                                    <UniformGrid Columns="2">
+                                                        <Label Content="Rouble"/>
+                                                        <TextBox IsReadOnly="True">
+                                                            <TextBox.Text>
+                                                                <MultiBinding Converter="{StaticResource paymentsSumConverter}" ConverterParameter="allYear">
+                                                                    <Binding RelativeSource="{RelativeSource Mode=Self}" Path="DataContext" Mode="OneWay"/>
+                                                                    <Binding ElementName="paymentDatePicker" Path="SelectedDate" Mode="OneWay"/>
+                                                                </MultiBinding>
+                                                            </TextBox.Text>
+                                                        </TextBox>
+                                                    </UniformGrid>
+
+                                                    <Button x:Name="SaveLawyer" Content="Сохранить" Click="SaveLawyer_Click"/>
                                                 </StackPanel>
                                             </GroupBox>
                                         </Expander>
@@ -317,7 +347,7 @@
                                                         <Label Content="Дата"/>
                                                         <Label Content="Проект"/>
                                                     </UniformGrid>
-                                                    <ItemsControl>
+                                                    <ItemsControl x:Name="partnersPayments" Visibility="{Binding RelativeSource={RelativeSource Mode=Self}, Path=ItemsSource.Count, Converter={StaticResource numberToBoolConverter}}">
                                                         <ItemsControl.ItemsSource>
                                                             <MultiBinding Converter="{StaticResource paymentsOnDateConverter}">
                                                                 <Binding ElementName="paymentDatePicker" Path="SelectedDate" Mode="OneWay"/>
@@ -335,6 +365,50 @@
                                                             </DataTemplate>
                                                         </ItemsControl.ItemTemplate>
                                                     </ItemsControl>
+                                                    <Label Content="В выбранном месяце выплат не производилось" Visibility="{Binding ElementName=partnersPayments, Path=ItemsSource.Count, Converter={StaticResource numberToBoolConverterInverted}, Mode=OneWay}"/>
+                                                    <TextBox Text="Баланс в этом месяце:" Margin="0,20,0,0" Style="{StaticResource Headers}"/>
+                                                    <ItemsControl ItemsSource="{Binding Source={StaticResource currencyType}}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <UniformGrid Columns="2">
+                                                                    <Label Content="{Binding RelativeSource={RelativeSource Mode=Self}, Path=DataContext, Mode=OneWay}"/>
+                                                                    <TextBox IsReadOnly="True">
+                                                                        <TextBox.Text>
+                                                                            <MultiBinding Converter="{StaticResource partnerPaymentsSumConverter}">
+                                                                                <Binding RelativeSource="{RelativeSource Mode=FindAncestor, AncestorType=ItemsControl}" Path="DataContext" Mode="OneWay"/>
+                                                                                <Binding ElementName="paymentDatePicker" Path="SelectedDate" Mode="OneWay"/>
+                                                                                <Binding RelativeSource="{RelativeSource Mode=Self}" Path="DataContext" Mode="OneWay"/>
+                                                                            </MultiBinding>
+                                                                        </TextBox.Text>
+                                                                    </TextBox>
+                                                                </UniformGrid>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                    <TextBox Text="Всего в этом месяце (в рублях):" Margin="0,20,0,0" Style="{StaticResource Headers}"/>
+                                                    <UniformGrid Columns="2">
+                                                        <Label Content="Rouble"/>
+                                                        <TextBox IsReadOnly="True">
+                                                            <TextBox.Text>
+                                                                <MultiBinding Converter="{StaticResource partnerPaymentsSumConverter}">
+                                                                    <Binding RelativeSource="{RelativeSource Mode=Self}" Path="DataContext" Mode="OneWay"/>
+                                                                    <Binding ElementName="paymentDatePicker" Path="SelectedDate" Mode="OneWay"/>
+                                                                </MultiBinding>
+                                                            </TextBox.Text>
+                                                        </TextBox>
+                                                    </UniformGrid>
+                                                    <TextBox Text="Всего за год (в рублях):" Margin="0,20,0,0" Style="{StaticResource Headers}"/>
+                                                    <UniformGrid Columns="2">
+                                                        <Label Content="Rouble"/>
+                                                        <TextBox IsReadOnly="True">
+                                                            <TextBox.Text>
+                                                                <MultiBinding Converter="{StaticResource partnerPaymentsSumConverter}" ConverterParameter="allYear">
+                                                                    <Binding RelativeSource="{RelativeSource Mode=Self}" Path="DataContext" Mode="OneWay"/>
+                                                                    <Binding ElementName="paymentDatePicker" Path="SelectedDate" Mode="OneWay"/>
+                                                                </MultiBinding>
+                                                            </TextBox.Text>
+                                                        </TextBox>
+                                                    </UniformGrid>
                                                 </StackPanel>
                                             </GroupBox>
                                         </Expander>

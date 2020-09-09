@@ -15,9 +15,28 @@ namespace LawCalculator_WPF
         public string Name { get; set; }
         public CurrencyType ProjectCurrency { get; set; }
 
-        public Partner OriginatingPartner { get; set; }
+        private Partner originatingPartner;
+        public Partner OriginatingPartner
+        {
+            get => originatingPartner;
+            set 
+            {
+                originatingPartner = value;
+                OnPropertyChanged(nameof(OriginatingPartner));
+            }
+        }
         public int OriginatingPartnerPercent { get; set; } = 20;
-        public Partner ManagingPartner { get; set; }
+
+        private Partner managingPartner;
+        public Partner ManagingPartner
+        { 
+            get => managingPartner;
+            set 
+            {
+                managingPartner = value;
+                OnPropertyChanged(nameof(ManagingPartner));
+            } 
+        }
         public int ManagingPartnerPercent { get; set; }
         public bool isSuccess;
         public ObservableCollection<Lawyer> Lawyers { get; set; } = new ObservableCollection<Lawyer>();
@@ -157,6 +176,11 @@ namespace LawCalculator_WPF
                 MessageBox.Show("В проекте нет активных юристов");
                 return;
             }
+            if (OriginatingPartner == null || ManagingPartner == null)
+            {
+                MessageBox.Show("В проект не добавлены партнёры");
+                return;
+            }
 
             List<Payment> paymentsToPay = new List<Payment>();
             foreach (Payment pay in Payments) if (pay.ToPay) paymentsToPay.Add(pay);
@@ -209,6 +233,7 @@ namespace LawCalculator_WPF
                 double moneyToAdd = CountMoneyOfCurrency(Payments, currency);
                 if (moneyToAdd > 0) thisProject.Payments.Add(new Payment() { Amount = percent * moneyToAdd / 100, Date = DateTime.Today, Currency = currency, ProjectName = Name });
             }
+            LawyerContext.UpdatePartner(lawyer);
             //foreach (Payment payment in thisProject.Payments) MessageBox.Show($"{payment.Amount.ToString()} {payment.Currency} получил {lawyer.Name} по проекту {payment.ProjectName}");
         }
 

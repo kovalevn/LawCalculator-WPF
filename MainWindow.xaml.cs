@@ -89,7 +89,6 @@ namespace LawCalculator_WPF
 
         private void ShowToPayBox_Checked(object sender, RoutedEventArgs e)
         {
-
             for (int i = 0; i < ProjectsControl.Items.Count; i++)
             {
                 bool hide = true;
@@ -97,16 +96,6 @@ namespace LawCalculator_WPF
                 UIElement uiElement = (UIElement)ProjectsControl.ItemContainerGenerator.ContainerFromIndex(i);
                 if (hide) uiElement.Visibility = Visibility.Collapsed;
             }
-
-            //foreach (var proj in ProjectsPanel.Children)
-            //{
-            //    if (proj.GetType() == typeof(ItemsControl))
-            //    {
-            //        bool hide = true;
-            //        foreach (double money in ((proj as ItemsControl).DataContext as Project).Money) if (money > 0) hide = false;
-            //        if (hide) (proj as ItemsControl).Visibility = Visibility.Collapsed;
-            //    }
-            //}
         }
 
         private void SearchBox_TextChanged(object sender, TextChangedEventArgs e)
@@ -460,6 +449,11 @@ namespace LawCalculator_WPF
         {
             Lawyer newLawyer = new Lawyer("Без имени", 0);
             (DataContext as LCViewModel).AllLawyers.Add(newLawyer);
+            using (LawyerContext db = new LawyerContext()) 
+            {
+                db.Lawyers.Add(newLawyer);
+                db.SaveChanges();
+            }
         }
 
         private void makePaymentsButton_Click(object sender, RoutedEventArgs e)
@@ -486,11 +480,18 @@ namespace LawCalculator_WPF
 
         private void AddPartner_Click(object sender, RoutedEventArgs e)
         {
-            (DataContext as LCViewModel).AllPartners.Add(new Partner("Без имени"));
+            Partner newPartner = new Partner("Без имени");
+            (DataContext as LCViewModel).AllPartners.Add(newPartner);
+            using (LawyerContext db = new LawyerContext()) 
+            {
+                db.Partners.Add(newPartner);
+                db.SaveChanges();
+            }
         }
 
         private void AddOriginatorToProject_Click(object sender, RoutedEventArgs e)
         {
+            ((sender as Button).DataContext as Project).OriginatingPartner = ((sender as Button).Tag as Partner);
             ((sender as Button).DataContext as Project).AddPartner((sender as Button).Tag as Partner);
             (sender as Button).Visibility = Visibility.Collapsed;
             ((sender as Button).DataContext as Project).OriginatorVisibilityTrigger = Visibility.Visible;
@@ -498,6 +499,7 @@ namespace LawCalculator_WPF
 
         private void AddManagerToProject_Click(object sender, RoutedEventArgs e)
         {
+            ((sender as Button).DataContext as Project).ManagingPartner = ((sender as Button).Tag as Partner);
             ((sender as Button).DataContext as Project).AddPartner((sender as Button).Tag as Partner);
             (sender as Button).Visibility = Visibility.Collapsed;
             ((sender as Button).DataContext as Project).ManagerVisibilityTrigger = Visibility.Visible;
@@ -511,6 +513,19 @@ namespace LawCalculator_WPF
         private void MakeAllPaymentsButton_Click(object sender, RoutedEventArgs e)
         {
             foreach (Project project in (DataContext as LCViewModel).AllProjects) project.PayMoney();
+        }
+
+        private void SaveLawyer_Click(object sender, RoutedEventArgs e)
+        {
+            LawyerContext.UpdateLawyer((sender as Button).DataContext as Lawyer);
+        }
+
+        private void SaveProject_Click(object sender, RoutedEventArgs e)
+        {
+            LawyerContext.UpdateProject((sender as Button).DataContext as Project);
+            foreach (Lawyer lawyer in ((sender as Button).DataContext as Project).Lawyers) LawyerContext.UpdateLawyer(lawyer);
+            LawyerContext.UpdatePartner(((sender as Button).DataContext as Project).OriginatingPartner);
+            LawyerContext.UpdatePartner(((sender as Button).DataContext as Project).ManagingPartner);
         }
 
         //private void EditOriginator_Click(object sender, RoutedEventArgs e)

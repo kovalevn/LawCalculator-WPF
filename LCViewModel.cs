@@ -28,23 +28,27 @@ namespace LawCalculator_WPF
 
         public LCViewModel()
         {
-            Partner Kovalev = new Partner("Сергей Ковалев");
-            Partner Kislov = new Partner("Сергей Кислов");
-            Partner Tugushi = new Partner("Дмитрий Тугуши");
-            Project Clarke = new Project("Clarke Invest Group", Kislov, Kovalev, false);
-            Lawyer Ivan = new Lawyer("Иван", 60000);
-            Lawyer Roman = new Lawyer("Роман", 80000);
+            //Partner Kovalev = new Partner("Сергей Ковалев");
+            //Partner Kislov = new Partner("Сергей Кислов");
+            //Partner Tugushi = new Partner("Дмитрий Тугуши");
+            //Project Clarke = new Project("Clarke Invest Group", Kislov, Kovalev, false);
+            //Lawyer Ivan = new Lawyer("Иван", 60000);
+            //Lawyer Roman = new Lawyer("Роман", 80000);
 
             //Clarke.AddLawyer(Ivan, 5);
             //Clarke.AddLawyer(Roman, 7);
-            Clarke.AddMoney(10000, CurrencyType.Rouble);
-            Clarke.AddMoney(10000, CurrencyType.Rouble, DateTime.Today.AddMonths(-4));
+            //Clarke.AddMoney(10000, CurrencyType.Rouble);
+            //Clarke.AddMoney(10000, CurrencyType.Rouble, DateTime.Today.AddMonths(-4));
 
-            //AllLawyers.Add(SqliteDataAccess.LoadData<Lawyer>("Lawyers")[0]);
+            //Получаем курсы валют
+            CurrencyConverter.Initialize();
+
+            //Заполняем коллекции юристов, проектов и партнёров из базы данных
             using (LawyerContext db = new LawyerContext())
             {
                 var lawyers = db.Lawyers;
                 var projects = db.Projects;
+                var partners = db.Partners;
                 //projects.Add(Clarke);
                 //db.SaveChanges();
 
@@ -61,6 +65,12 @@ namespace LawCalculator_WPF
                     AllLawyers.Add(lwyr);
                 }
 
+                foreach (Partner partner in partners)
+                {
+                    Partner prtnr = db.Partners.Include("LawyersProjects").Include("LawyersProjects.Payments").Where(p => p.Name == partner.Name).FirstOrDefault();
+                    AllPartners.Add(prtnr);
+                }
+
                 //foreach (Lawyer lawyer in lawyers)
                 //{
                 //    MessageBox.Show($"{lawyer.Name}, {lawyer.Salary}");
@@ -74,9 +84,9 @@ namespace LawCalculator_WPF
 
             //AllProjects.Add(Clarke);
 
-            AllPartners.Add(Kovalev);
-            AllPartners.Add(Kislov);
-            AllPartners.Add(Tugushi);
+            //AllPartners.Add(Kovalev);
+            //AllPartners.Add(Kislov);
+            //AllPartners.Add(Tugushi);
 
             //AllLawyers.Add(Ivan);
             //AllLawyers.Add(Roman);

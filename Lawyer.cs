@@ -1,20 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Text;
 
 namespace LawCalculator_WPF
 {
-    class Lawyer
+    class Lawyer : IHaveId
     {
         public int Id { get; set; }
         public string Name { get; set; }
         public int Salary { get; set; }
         public ICollection<Project> Project { get; set; }
         public ObservableCollection<LawyersProject> LawyersProjects { get; set; } = new ObservableCollection<LawyersProject>();
-
-        //public Dictionary<string, SuccessAndProject> Projects = new Dictionary<string, SuccessAndProject>();
-        //public Dictionary<string, Payment> Payments = new Dictionary<string, Payment>();
 
         //Как будет выглядеть вкладка "Юристы" - имя каждого юриста в системе, при нажатии на стрелочку - раскрывающийся список проектов, по
         //которым он работает, с суммой заработанного им (в плюсе / в минусе). Такую же для партнеров. Всего три вкладки - проекты, юристы,
@@ -28,14 +26,62 @@ namespace LawCalculator_WPF
 
         public Lawyer() { }
 
-        //public void ShowProjects()
-        //{
-        //    if (Projects.Count > 0)
-        //    {
-        //        Console.WriteLine($"Юрист {Name} участвует в проектах:");
-        //        foreach (var project in Projects) Console.WriteLine(project.Value.Project.Name);
-        //    }
-        //    else Console.WriteLine($"Юрист {Name} не занят ни в одном проекте");
-        //}
+        public double CountBalance(DateTime date)
+        {
+            List<Payment> thisMonthPayments = new List<Payment>();
+            foreach (LawyersProject lp in LawyersProjects)
+            {
+                var payments = lp.Payments.Where(p => p.Date.Month == date.Month && p.Date.Year == date.Year).ToList();
+                thisMonthPayments.AddRange(payments);
+            }
+            double sum = -Salary;
+            foreach (Payment payment in thisMonthPayments)
+            {
+                switch (payment.Currency)
+                {
+                    case CurrencyType.Dollar:
+                    case CurrencyType.DollarCashless:
+                        sum += CurrencyConverter.ConvertToRouble(payment.Amount, CurrencyType.Dollar);
+                        break;
+                    case CurrencyType.Euro:
+                    case CurrencyType.EuroCashless:
+                        sum += CurrencyConverter.ConvertToRouble(payment.Amount, CurrencyType.Euro);
+                        break;
+                    default:
+                        sum += payment.Amount;
+                        break;
+                }
+            }
+            return sum;
+        }
+
+        public double CountYearBalance(DateTime date)
+        {
+            List<Payment> thisYearPayments = new List<Payment>();
+            foreach (LawyersProject lp in LawyersProjects)
+            {
+                var payments = lp.Payments.Where(p => p.Date.Month <= date.Month && p.Date.Year == date.Year).ToList();
+                thisYearPayments.AddRange(payments);
+            }
+            double sum = (-Salary * date.Month);
+            foreach (Payment payment in thisYearPayments)
+            {
+                switch (payment.Currency)
+                {
+                    case CurrencyType.Dollar:
+                    case CurrencyType.DollarCashless:
+                        sum += CurrencyConverter.ConvertToRouble(payment.Amount, CurrencyType.Dollar);
+                        break;
+                    case CurrencyType.Euro:
+                    case CurrencyType.EuroCashless:
+                        sum += CurrencyConverter.ConvertToRouble(payment.Amount, CurrencyType.Euro);
+                        break;
+                    default:
+                        sum += payment.Amount;
+                        break;
+                }
+            }
+            return sum;
+        }
     }
 }

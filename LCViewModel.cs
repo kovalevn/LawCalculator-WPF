@@ -1,22 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using OfficeOpenXml;
+using System.Globalization;
+using System.Data.Entity;
 
 namespace LawCalculator_WPF
 {
@@ -28,17 +17,11 @@ namespace LawCalculator_WPF
 
         public LCViewModel()
         {
-            //Partner Kovalev = new Partner("Сергей Ковалев");
-            //Partner Kislov = new Partner("Сергей Кислов");
-            //Partner Tugushi = new Partner("Дмитрий Тугуши");
-            //Project Clarke = new Project("Clarke Invest Group", Kislov, Kovalev, false);
-            //Lawyer Ivan = new Lawyer("Иван", 60000);
-            //Lawyer Roman = new Lawyer("Роман", 80000);
-
-            //Clarke.AddLawyer(Ivan, 5);
-            //Clarke.AddLawyer(Roman, 7);
-            //Clarke.AddMoney(10000, CurrencyType.Rouble);
-            //Clarke.AddMoney(10000, CurrencyType.Rouble, DateTime.Today.AddMonths(-4));
+            Partner Kovalev = new Partner("Сергей Ковалев");
+            Partner Kislov = new Partner("Сергей Кислов");
+            Partner Tugushi = new Partner("Дмитрий Тугуши");
+            Lawyer Ivan = new Lawyer("Иван", 60000);
+            Lawyer Roman = new Lawyer("Роман", 80000);
 
             //Получаем курсы валют
             CurrencyConverter.Initialize();
@@ -49,7 +32,13 @@ namespace LawCalculator_WPF
                 var lawyers = db.Lawyers;
                 var projects = db.Projects;
                 var partners = db.Partners;
-                //projects.Add(Clarke);
+
+                //Раcкомментить для создания юристов и партнёров после удаления датабазы
+                //lawyers.Add(Ivan);
+                //lawyers.Add(Roman);
+                //partners.Add(Kovalev);
+                //partners.Add(Kislov);
+                //partners.Add(Tugushi);
                 //db.SaveChanges();
 
                 foreach (Project project in projects)
@@ -58,52 +47,37 @@ namespace LawCalculator_WPF
                     AllProjects.Add(proj);
                 }
 
-                //lawyers.Add(Ivan);
                 foreach (Lawyer lawyer in lawyers)
                 {
                     Lawyer lwyr = db.Lawyers.Include("LawyersProjects").Include("LawyersProjects.Payments").Where(l => l.Name == lawyer.Name).FirstOrDefault();
                     AllLawyers.Add(lwyr);
                 }
 
+                //db.Lawyers.Include("LawyersProjects").Include("LawyersProjects.Payments").Load();
+                //AllLawyers = db.Lawyers.Local;
+
                 foreach (Partner partner in partners)
                 {
                     Partner prtnr = db.Partners.Include("LawyersProjects").Include("LawyersProjects.Payments").Where(p => p.Name == partner.Name).FirstOrDefault();
                     AllPartners.Add(prtnr);
                 }
-
-                //foreach (Lawyer lawyer in lawyers)
-                //{
-                //    MessageBox.Show($"{lawyer.Name}, {lawyer.Salary}");
-                //    foreach(LawyersProject project in lawyer.LawyersProjects)
-                //    {
-                //        MessageBox.Show($"{project.Name}");
-                //    }
-                //}
             }
 
+            //Выставляем начальную валюту для каждого проекта
+            foreach (Project project in AllProjects) project.SetProjectCurrency();
 
-            //AllProjects.Add(Clarke);
-
-            //AllPartners.Add(Kovalev);
-            //AllPartners.Add(Kislov);
-            //AllPartners.Add(Tugushi);
-
-            //AllLawyers.Add(Ivan);
-            //AllLawyers.Add(Roman);
-
-            //GetInfoFromSpreadsheet();
-            foreach (Project project in AllProjects) project.CountMoneyOld();
+            //Сортируем проекты
             AllProjects = new ObservableCollection<Project>(AllProjects.OrderBy(i => i));
         }
 
-        public void GetInfoFromSpreadsheet()
+        public void GetInfoFromSpreadsheet(string sheetPath, int dollar, int euro, int rouble, bool dateFromActs)
         {
             //var sheetAdress = new FileInfo(@"C:\Users\Никита\Desktop\Проекты\LawCalculator WPF\Движение по счетам_2020_.xlsx");
-            var sheetAdress = new FileInfo(@"C:\Users\Никита\Desktop\Проекты\LawCalculator WPF\Движение по счетам_2020_с актами.xlsx");
+            //var sheetAdress = new FileInfo(@"C:\Users\Никита\Desktop\Проекты\LawCalculator WPF\Движение по счетам_2020_с актами.xlsx");
+            var sheetAdress = new FileInfo(sheetPath);
             using (var p = new ExcelPackage(sheetAdress))
             {
-                //int[] sheets = new int[] { 1, 3, 4 };
-                int[] sheets = new int[] { 0, 1, 2 };
+                int[] sheets = new int[] { dollar, euro, rouble };
                 foreach (int sheet in sheets)
                 {
                     var currentSheet = p.Workbook.Worksheets[sheet];
@@ -112,13 +86,41 @@ namespace LawCalculator_WPF
                         if (!string.IsNullOrEmpty((string)currentSheet.Cells[row, 4].Value))
                         {
                             if (currentSheet.Cells[row, 4].Value.ToString() != "Итого за день:" && currentSheet.Cells[row, 4].Value.ToString() != "Исходящий остаток"
-                                && currentSheet.Cells[row, 4].Value.ToString() != "EUR" && currentSheet.Cells[row, 4].Value.ToString() != "USD")
+                                && currentSheet.Cells[row, 4].Value.ToString() != "EUR" && currentSheet.Cells[row, 4].Value.ToString() != "USD"
+                                && !currentSheet.Cells[row, 4].Value.ToString().ToLower().Contains("входящий остаток"))
                             {
                                 string projName = currentSheet.Cells[row, 4].Value.ToString().Trim();
                                 bool doNotAddPayment = false;
                                 bool doNotAddProj = false;
-                                Payment pay = new Payment() { Amount = (double)currentSheet.Cells[row, 5].Value, Currency = sheet == 0 ? CurrencyType.Dollar : sheet == 1 ? CurrencyType.Euro : CurrencyType.Rouble, Date = DateTime.FromOADate((double)currentSheet.Cells[row, 2].Value), ProjectName = projName };
-                                pay.ToPay = DateTime.Compare(pay.Date, DateTime.Today.AddMonths(-3)) <= 0 && !pay.Payed ? true : false;
+                                DateTime date;
+
+                                if (dateFromActs)
+                                {
+
+                                    try
+                                    {
+                                        date = Convert.ToDateTime(currentSheet.Cells[row, 6].Value, CultureInfo.InvariantCulture);
+                                    }
+                                    catch (FormatException)
+                                    {
+                                        string dateString = currentSheet.Cells[row, 6].Value.ToString();
+                                        //Поправить логику: там, где нет актов - всегда выбираем из второй клетки
+                                        if (dateString == "Возмещение расходов") date = DateTime.FromOADate((double)currentSheet.Cells[row, 2].Value);
+                                        date = DateTime.FromOADate((double)currentSheet.Cells[row, 2].Value);
+                                    }
+                                }
+                                else date = DateTime.FromOADate((double)currentSheet.Cells[row, 2].Value);
+
+
+                                Payment pay = new Payment()
+                                {
+                                    Amount = (double)currentSheet.Cells[row, 5].Value,
+                                    Currency = sheet == dollar ? CurrencyType.Dollar : sheet == euro ? CurrencyType.Euro : CurrencyType.Rouble,
+                                    Date = date,
+                                    ProjectName = projName 
+                                };
+                                //Добавить тут давность платежей, не учитываем те, которые пришли раньше, чем 3 месяца до сегодняшней даты, а также те, что старше Н месяцев
+                                pay.ToPay = DateTime.Compare(pay.Date, DateTime.Today.AddMonths(-3)) <= 0 && !pay.Payed;
                                 Project newProj = new Project(projName, false);
                                 foreach (Project proj in AllProjects)
                                 {
@@ -161,7 +163,7 @@ namespace LawCalculator_WPF
                     }
                 }
             }
-            foreach (Project project in AllProjects) project.CountMoneyOld();
+            foreach (Project project in AllProjects) project.SetProjectCurrency();
             MessageBox.Show("Платежи выгружены");
         }
     }

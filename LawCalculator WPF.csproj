@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Images\checkmark.png" />
+    <None Remove="Изображения\checkmark.png" />
     <None Remove="LawCalculatorDB.db" />
   </ItemGroup>
 
@@ -30,7 +30,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Images\checkmark.png" />
+    <Resource Include="Изображения\checkmark.png" />
   </ItemGroup>
 
   <ItemGroup>

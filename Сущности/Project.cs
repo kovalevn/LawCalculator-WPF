@@ -6,6 +6,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using System.Windows;
+using System.Linq;
 
 namespace LawCalculator_WPF
 {
@@ -81,6 +82,8 @@ namespace LawCalculator_WPF
         //По стрелке будет меню - партнёры, юристы, платежи. При нажатии на платежи можно будет увидеть весь список платежей с датой/суммой,
         //или осуществить поиск по дате
 
+        #region Конструкторы
+
         public Project(string name, Partner originator, Partner manager, bool sucsess)
         {
             this.Name = name;
@@ -105,16 +108,10 @@ namespace LawCalculator_WPF
             ManagerVisibilityTrigger = Visibility.Collapsed;
         }
 
-        #region Старые методы подсчёта денег
+        #endregion
 
-        public void CountMoneyOld()
+        public void SetProjectCurrency()
         {
-        //    MoneyDollar = 0;
-        //    MoneyRouble = 0;
-        //    MoneyEuro = 0;
-        //    MoneyDollarCashless = 0;
-        //    MoneyRoubleCashless = 0;
-        //    MoneyEuroCashless = 0;
             bool setCurrency = true;
             foreach (Payment pay in Payments)
             {
@@ -125,57 +122,13 @@ namespace LawCalculator_WPF
                         ProjectCurrency = pay.Currency;
                         setCurrency = false;
                     }
-                    //pay.ToPay = true;
-                    //            if (pay.Currency == CurrencyType.Dollar) MoneyDollar += pay.Amount;
-                    //            if (pay.Currency == CurrencyType.Rouble) MoneyRouble += pay.Amount;
-                    //            if (pay.Currency == CurrencyType.Euro) MoneyEuro += pay.Amount;
-                    //            if (pay.Currency == CurrencyType.DollarCashless) MoneyDollarCashless += pay.Amount;
-                    //            if (pay.Currency == CurrencyType.RoubleCashless) MoneyRoubleCashless += pay.Amount;
-                    //            if (pay.Currency == CurrencyType.EuroCashless) MoneyEuroCashless += pay.Amount;
                 }
-                //else pay.ToPay = false;
             }
+        }
 
-            //    Money = new List<double> { MoneyDollar, MoneyRouble, MoneyEuro, MoneyDollarCashless, MoneyRoubleCashless, MoneyEuroCashless };
-            //    OriginatorMoney = CountOriginatorMoney();
-            //    ManagerMoney = CountManagerMoney();
-            }
-
-            //private ObservableCollection<string> CountOriginatorMoney()
-            //{
-            //    return new ObservableCollection<string>()
-            //        {
-            //            (MoneyDollar * OriginatingPartnerPercent / 100).ToString("N0", CultureInfo.InvariantCulture) + " $",
-            //            (MoneyRouble * OriginatingPartnerPercent / 100).ToString("N0", CultureInfo.InvariantCulture) + " ₽",
-            //            (MoneyEuro * OriginatingPartnerPercent / 100).ToString("N0", CultureInfo.InvariantCulture) + " €",
-            //            (MoneyDollarCashless * OriginatingPartnerPercent / 100).ToString("N0", CultureInfo.InvariantCulture) + " $ б/н",
-            //            (MoneyRoubleCashless * OriginatingPartnerPercent / 100).ToString("N0", CultureInfo.InvariantCulture) + " ₽ б/н",
-            //            (MoneyEuroCashless * OriginatingPartnerPercent / 100).ToString("N0", CultureInfo.InvariantCulture) + " € б/н",
-            //        };
-            //}
-
-            //private ObservableCollection<string> CountManagerMoney()
-            //{
-            //    return new ObservableCollection<string>()
-            //        {
-            //            (MoneyDollar * ManagingPartnerPercent / 100).ToString("N0", CultureInfo.InvariantCulture) + " $",
-            //            (MoneyRouble * ManagingPartnerPercent / 100).ToString("N0", CultureInfo.InvariantCulture) + " ₽",
-            //            (MoneyEuro * OriginatingPartnerPercent / 100).ToString("N0", CultureInfo.InvariantCulture) + " €",
-            //            (MoneyDollarCashless * ManagingPartnerPercent / 100).ToString("N0", CultureInfo.InvariantCulture) + " $ б/н",
-            //            (MoneyRoubleCashless * ManagingPartnerPercent / 100).ToString("N0", CultureInfo.InvariantCulture) + " ₽ б/н",
-            //            (MoneyEuroCashless * ManagingPartnerPercent / 100).ToString("N0", CultureInfo.InvariantCulture) + " € б/н",
-            //        };
-            //}
-            #endregion
-
-            public void PayMoney()
+        public void PayMoney()
         {
-            //Пока не добавил выплаты для партнёров, потом выплаты будут происходить даже при отсутствии юристов, если партнёры указаны
-            if (Lawyers.Count == 0)
-            {
-                MessageBox.Show("В проекте нет активных юристов");
-                return;
-            }
+
             if (OriginatingPartner == null || ManagingPartner == null)
             {
                 MessageBox.Show("В проект не добавлены партнёры");
@@ -234,19 +187,12 @@ namespace LawCalculator_WPF
                 if (moneyToAdd > 0) thisProject.Payments.Add(new Payment() { Amount = percent * moneyToAdd / 100, Date = DateTime.Today, Currency = currency, ProjectName = Name });
             }
             LawyerContext.UpdatePartner(lawyer);
-            //foreach (Payment payment in thisProject.Payments) MessageBox.Show($"{payment.Amount.ToString()} {payment.Currency} получил {lawyer.Name} по проекту {payment.ProjectName}");
         }
 
         private void AddMoneyToLawyersProjects(Lawyer lawyer)
         {
-            LawyersProject thisProject = new LawyersProject();
-            foreach (LawyersProject project in lawyer.LawyersProjects)
-            {
-                if (project.Name == Name)
-                {
-                    thisProject = project;
-                }
-            }
+            LawyersProject thisProject = lawyer.LawyersProjects.Where(x => x.Name == Name).FirstOrDefault();
+
             //Здесь добавляем один пэймент за каждую валюту, размера thisProject.Percent * Payment.Amount каждого вида валюты, дата - сегодняшний день
             //Для каждого вида валюты складываем все платежи c соответствующей валютой, умножаем на процент юриста и добавляем платёж
             if (thisProject.Percent <= 0)

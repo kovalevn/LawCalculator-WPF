@@ -25,50 +25,16 @@ namespace LawCalculator_WPF
     /// </summary>
     public partial class MainWindow : Window
     {
-        private ObservableCollection<Project> AllProjects { get; set; } = new ObservableCollection<Project>();
-        private ObservableCollection<Lawyer> AllLawyers { get; set; } = new ObservableCollection<Lawyer>();
-        private ObservableCollection<Partner> AllPartners { get; set; } = new ObservableCollection<Partner>();
-
-        //private UniformGrid lawyersGrid;
         public MainWindow()
         {
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             InitializeComponent();
             DataContext = new LCViewModel();
-            //this.DataContext = this;
 
-            Partner Kovalev = new Partner("Сергей Ковалев");
-            Partner Kislov = new Partner("Сергей Кислов");
-            Partner Tugushi = new Partner("Дмитрий Тугуши");
-            Project Clarke = new Project("Clarke Invest Group", Kislov, Kovalev, false);
-            Lawyer Ivan = new Lawyer("Иван", 60000);
-            Lawyer Roman = new Lawyer("Роман", 80000);
-
-            //Clarke.AddLawyer(Ivan, 5);
-            //Clarke.AddLawyer(Roman, 7);
-            //Clarke.RemoveLawyer(Ivan);
-
-            AllProjects.Add(Clarke);
-
-            AllPartners.Add(Kovalev);
-            AllPartners.Add(Kislov);
-            AllPartners.Add(Tugushi);
-
-            AllLawyers.Add(Ivan);
-            AllLawyers.Add(Roman);
-
+            //Подписываемся на события
             SearchBox.TextChanged += SearchBox_TextChanged;
             ShowToPayBox.Checked += ShowToPayBox_Checked;
             ShowToPayBox.Unchecked += ShowToPayBox_Unchecked;
-
-            AllProjects = new ObservableCollection<Project>(AllProjects.OrderBy(i => i));
-
-            //LawyersPanel.ItemsSource = AllLawyers;
-            //ProjectsControl.ItemsSource = AllProjects;
-            //GetInfoFromSpreadsheet();
-            //MakeProjects();
-            //foreach (Project project in AllProjects) project.CountMoney();
-
         }
 
         private void ShowToPayBox_Unchecked(object sender, RoutedEventArgs e)
@@ -445,6 +411,8 @@ namespace LawCalculator_WPF
             }
         }
 
+        #region Методы кликов по кнопкам
+
         private void AddLawyer_Click(object sender, RoutedEventArgs e)
         {
             Lawyer newLawyer = new Lawyer("Без имени", 0);
@@ -463,8 +431,6 @@ namespace LawCalculator_WPF
 
         private void AddLawyerToProject_Click(object sender, RoutedEventArgs e)
         {
-            //Сделать выбор юриста в проект из коллекции юристов
-
             //Lawyer lawyer = new Lawyer(((sender as Button).Tag as Lawyer).Name, 0);
             bool doNotAddLawyer = false;
             foreach (Lawyer lawyer in ((sender as Button).DataContext as Project).Lawyers) if (lawyer.Name == ((sender as Button).Tag as Lawyer).Name) doNotAddLawyer = true;
@@ -507,7 +473,8 @@ namespace LawCalculator_WPF
 
         private void UploadFromSpreadsheetButton_Click(object sender, RoutedEventArgs e)
         {
-            (DataContext as LCViewModel).GetInfoFromSpreadsheet();
+            (DataContext as LCViewModel).GetInfoFromSpreadsheet(@"C:\Users\Никита\Desktop\Проекты\LawCalculator WPF\Движение по счетам_2020_с актами.xlsx", 0, 1, 2, true);
+            (DataContext as LCViewModel).GetInfoFromSpreadsheet(@"C:\Users\Никита\Desktop\Проекты\LawCalculator WPF\Движение по счетам_2020_2_квартал.xlsx", 1, 3, 4, false);
         }
 
         private void MakeAllPaymentsButton_Click(object sender, RoutedEventArgs e)
@@ -528,53 +495,6 @@ namespace LawCalculator_WPF
             LawyerContext.UpdatePartner(((sender as Button).DataContext as Project).ManagingPartner);
         }
 
-        //private void EditOriginator_Click(object sender, RoutedEventArgs e)
-        //{
-        //    ((sender as Button).DataContext as Project).RemovePartner((sender as Button).Tag as Partner);
-        //    (sender as Button).Visibility = Visibility.Collapsed;
-        //    (DataContext as LCViewModel).OriginatorVisibilityTrigger = Visibility.Visible;
-        //}
-
-        //private void GetInfoFromSpreadsheet()
-        //{
-        //    var sheetAdress = new FileInfo(@"C:\Users\Никита\Desktop\Проекты\LawCalculator WPF\Движение по счетам_2020_.xlsx");
-        //    using (var p = new ExcelPackage(sheetAdress))
-        //    {
-        //        int[] sheets = new int[] { 1, 3, 4 };
-        //        foreach (int sheet in sheets)
-        //        {
-        //            var currentSheet = p.Workbook.Worksheets[sheet];
-        //            for (int row = 4; row < 600; row++)
-        //            {
-        //                if (!string.IsNullOrEmpty((string)currentSheet.Cells[row, 4].Value))
-        //                {
-        //                    if (currentSheet.Cells[row, 4].Value.ToString() != "Итого за день:" && currentSheet.Cells[row, 4].Value.ToString() != "Исходящий остаток")
-        //                    {
-        //                        string projName = currentSheet.Cells[row, 4].Value.ToString().Trim();
-        //                        bool doNotAddProj = false;
-        //                        //MessageBox.Show(projName);
-        //                        Payment pay = new Payment() { Amount = (double)currentSheet.Cells[row, 5].Value, Currency = sheet == 1 ? CurrencyType.Dollar : sheet == 3 ? CurrencyType.Euro : CurrencyType.Rouble , Date = DateTime.FromOADate((double)currentSheet.Cells[row, 2].Value) };
-        //                        Project newProj = new Project(projName, AllPartners[new Random().Next(0, AllPartners.Count)],
-        //                                AllPartners[new Random().Next(0, AllPartners.Count)], false);
-        //                        foreach (Project proj in AllProjects)
-        //                        {
-        //                            if (proj.Name == projName)
-        //                            {
-        //                                doNotAddProj = true;
-        //                                proj.Payments.Add(pay);
-        //                            }
-        //                        }
-
-        //                        if (!doNotAddProj)
-        //                        {
-        //                            newProj.Payments.Add(pay);
-        //                            AllProjects.Add(newProj);
-        //                        }
-        //                    }
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
+        #endregion
     }
 }

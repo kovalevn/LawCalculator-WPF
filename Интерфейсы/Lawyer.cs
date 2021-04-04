@@ -5,6 +5,7 @@ using System.Text;
 
 namespace LawCalculator_WPF.Интерфейсы
 {
+    //Общий интерфейс для сущностей, имеющих параметры юриста (юристы, партнёры и т.д.)
     interface Lawyer
     {
         public int Id { get; set; }

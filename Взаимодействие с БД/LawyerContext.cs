@@ -22,11 +22,15 @@ namespace LawCalculator_WPF
         {
             using (LawyerContext db = new LawyerContext())
             {
-                Lawyer lwyr = db.Lawyers.Include("LawyersProjects").Include("LawyersProjects.Payments").Where(l => l.Id == lawyer.Id).FirstOrDefault();
+
+                //db.Entry(lawyer).State = EntityState.Modified;
+                //db.SaveChanges();
+                Lawyer lwyr = db.Lawyers.Include("LawyersProjects").Include("LawyersProjects.Payments").FirstOrDefault(l => l.Id == lawyer.Id);
+                //db.Entry(lwyr).State = EntityState.Modified;
                 lwyr.Salary = lawyer.Salary;
                 lwyr.Name = lawyer.Name;
                 CompareCollections(lwyr.LawyersProjects, lawyer.LawyersProjects);
-                foreach(LawyersProject lp in lawyer.LawyersProjects)
+                foreach (LawyersProject lp in lawyer.LawyersProjects)
                 {
                     var lwyrpr = lwyr.LawyersProjects.Where(p => p.Id == lp.Id).FirstOrDefault();
                     lwyrpr.Percent = lp.Percent;
@@ -62,36 +66,22 @@ namespace LawCalculator_WPF
         {
             using (LawyerContext db = new LawyerContext())
             {
-                Project proj = db.Projects.Include("Payments").Include("Lawyers").Where(p => p.Name == project.Name).FirstOrDefault();
-                if (project.OriginatingPartner != null) proj.OriginatingPartner = db.Partners.Where(p => p.Id == project.OriginatingPartner.Id).FirstOrDefault();
-                if (project.ManagingPartner != null) proj.ManagingPartner = db.Partners.Where(p => p.Id == project.ManagingPartner.Id)?.FirstOrDefault();
-                proj.OriginatingPartnerPercent = project.OriginatingPartnerPercent;
-                proj.ManagingPartnerPercent = project.ManagingPartnerPercent;
-                proj.OriginatorVisibilityTrigger = project.OriginatorVisibilityTrigger;
-                proj.ManagerVisibilityTrigger = project.ManagerVisibilityTrigger;
+                Project dbProj = db.Projects.Include("Payments").Include("Lawyers").Where(p => p.Name == project.Name).FirstOrDefault();
+                if (project.OriginatingPartner != null) dbProj.OriginatingPartner = db.Partners.Where(p => p.Id == project.OriginatingPartner.Id).FirstOrDefault();
+                if (project.ManagingPartner != null) dbProj.ManagingPartner = db.Partners.Where(p => p.Id == project.ManagingPartner.Id)?.FirstOrDefault();
+                dbProj.OriginatingPartnerPercent = project.OriginatingPartnerPercent;
+                dbProj.ManagingPartnerPercent = project.ManagingPartnerPercent;
+                dbProj.OriginatorVisibilityTrigger = project.OriginatorVisibilityTrigger;
+                dbProj.ManagerVisibilityTrigger = project.ManagerVisibilityTrigger;
                 foreach (Lawyer l in project.Lawyers)
                 {
                     bool doNotAddLawyer = false;
-                    foreach (Lawyer lawyer in proj.Lawyers) if (lawyer.Name == l.Name) doNotAddLawyer = true;
-                    if (!doNotAddLawyer) proj.Lawyers.Add(db.Lawyers.Where(ly => ly.Name == l.Name).FirstOrDefault());
+                    foreach (Lawyer lawyer in dbProj.Lawyers) if (lawyer.Name == l.Name) doNotAddLawyer = true;
+                    if (!doNotAddLawyer) dbProj.Lawyers.Add(db.Lawyers.Where(ly => ly.Name == l.Name).FirstOrDefault());
                 }
 
-                //if (proj.Payments.Count < project.Payments.Count)
-                //{
-                //    foreach (Payment p in project.Payments)
-                //    {
-                //        bool doNotAddPay = false;
-                //        foreach (Payment payment in proj.Payments) if (payment.Id == p.Id) doNotAddPay = true;
-                //        if (!doNotAddPay) proj.Payments.Add(db.Payments.Where(py => py.Id == p.Id).FirstOrDefault());
-                //    }
-                //}
-                //else if (proj.Payments.Count > project.Payments.Count) 
-                //{
-                //    //Project projToRemove = proj.Payments.SingleOrDefault(py => )
-                //}
-
-                CompareCollections(proj.Payments, project.Payments, db.Payments);
-                CompareCollections(proj.PayedPayments, project.PayedPayments, db.Payments);
+                CompareCollections(dbProj.Payments, project.Payments, db.Payments);
+                CompareCollections(dbProj.PayedPayments, project.PayedPayments, db.Payments);
 
                 db.SaveChanges();
             }

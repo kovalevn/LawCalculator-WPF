@@ -11,12 +11,9 @@ namespace LawCalculator_WPF
         public int Id { get; set; }
         public string Name { get; set; }
         public int Salary { get; set; }
+        public bool IsCounselor;
         public ICollection<Project> Project { get; set; }
         public ObservableCollection<LawyersProject> LawyersProjects { get; set; } = new ObservableCollection<LawyersProject>();
-
-        //Как будет выглядеть вкладка "Юристы" - имя каждого юриста в системе, при нажатии на стрелочку - раскрывающийся список проектов, по
-        //которым он работает, с суммой заработанного им (в плюсе / в минусе). Такую же для партнеров. Всего три вкладки - проекты, юристы,
-        //пратнёры
 
         public Lawyer(string name, int salary)
         {
@@ -26,6 +23,7 @@ namespace LawCalculator_WPF
 
         public Lawyer() { }
 
+        //Считаем баланс юриста: складываем соответствующие по датам платежи из его проектов, и вычетаем зарплату
         public double CountBalance(DateTime date)
         {
             List<Payment> thisMonthPayments = new List<Payment>();

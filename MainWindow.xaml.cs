@@ -1,21 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using OfficeOpenXml;
 
 namespace LawCalculator_WPF
@@ -43,14 +30,6 @@ namespace LawCalculator_WPF
             {
                 ((UIElement)ProjectsControl.ItemContainerGenerator.ContainerFromIndex(i)).Visibility = Visibility.Visible;
             }
-
-            //foreach (var proj in ProjectsPanel.Children)
-            //{
-            //    if (proj.GetType() == typeof(Expander))
-            //    {
-            //        (proj as Expander).Visibility = Visibility.Visible;
-            //    }
-            //}
         }
 
         private void ShowToPayBox_Checked(object sender, RoutedEventArgs e)
@@ -74,17 +53,6 @@ namespace LawCalculator_WPF
                 else uiElement.Visibility = Visibility.Visible;
                 if (SearchBox.Text == string.Empty) uiElement.Visibility = Visibility.Visible;
             }
-
-            //foreach (var proj in ProjectsPanel.Children)
-            //{
-            //    //MessageBox.Show(ProjectsPanel.Children.Count.ToString());
-            //    if (proj.GetType() == typeof(Expander))
-            //    {
-            //        if (!(proj as Expander).Header.ToString().ToLower().Contains(SearchBox.Text.ToLower())) (proj as Expander).Visibility = Visibility.Collapsed;
-            //        else (proj as Expander).Visibility = Visibility.Visible;
-            //        if (SearchBox.Text == string.Empty) (proj as Expander).Visibility = Visibility.Visible;
-            //    }
-            //}
         }
 
         //private void MakeProjects()
@@ -400,12 +368,6 @@ namespace LawCalculator_WPF
         {
             for (int i = 0; i < ProjectsControl.Items.Count; i++)
             {
-                //while(!Type.Equals(sender.GetType(), new ItemsControl()))
-                //{ 
-                //    sender = VisualTreeHelper.GetParent(sender as DependencyObject);
-                //    MessageBox.Show(sender.ToString());
-                //}
-
                 Expander exp = VisualTreeHelper.GetChild(ProjectsControl.ItemContainerGenerator.ContainerFromIndex(i), 0) as Expander;
                 if(!(sender as Expander).Equals(exp)) exp.IsExpanded = false;
             }
@@ -413,46 +375,50 @@ namespace LawCalculator_WPF
 
         #region Методы кликов по кнопкам
 
-        private void AddLawyer_Click(object sender, RoutedEventArgs e)
+        #region Проекты
+        private void UploadFromSpreadsheetButton_Click(object sender, RoutedEventArgs e)
         {
-            Lawyer newLawyer = new Lawyer("Без имени", 0);
-            (DataContext as LCViewModel).AllLawyers.Add(newLawyer);
-            using (LawyerContext db = new LawyerContext()) 
-            {
-                db.Lawyers.Add(newLawyer);
-                db.SaveChanges();
-            }
+            (DataContext as LCViewModel).GetInfoFromSpreadsheet(@"C:\Users\Никита\Desktop\Проекты\LawCalculator WPF\Движение по счетам_2020_с актами.xlsx", 0, 1, 2, true);
+            (DataContext as LCViewModel).GetInfoFromSpreadsheet(@"C:\Users\Никита\Desktop\Проекты\LawCalculator WPF\Движение по счетам_2020_2_квартал.xlsx", 1, 3, 4, false);
         }
 
         private void makePaymentsButton_Click(object sender, RoutedEventArgs e)
         {
-            ((sender as Button).DataContext as Project).PayMoney();
+            Project senderProject = (sender as Button).DataContext as Project;
+
+            senderProject.PayMoney();
+            (DataContext as LCViewModel).db.Update(senderProject);
+            foreach(Lawyer lawyer in senderProject.Lawyers)
+            {
+                (DataContext as LCViewModel).db.Update(lawyer);
+            }
+            if (senderProject.ManagingPartner != null) (DataContext as LCViewModel).db.Update(senderProject.ManagingPartner);
+            if (senderProject.OriginatingPartner != null) (DataContext as LCViewModel).db.Update(senderProject.OriginatingPartner);
         }
 
+        private void MakeAllPaymentsButton_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (Project project in (DataContext as LCViewModel).AllProjects)
+            {
+                project.PayMoney();
+                (DataContext as LCViewModel).db.Update(project);
+            }
+        }
         private void AddLawyerToProject_Click(object sender, RoutedEventArgs e)
         {
-            //Lawyer lawyer = new Lawyer(((sender as Button).Tag as Lawyer).Name, 0);
+            Lawyer senderLawyer = (sender as Button).Tag as Lawyer;
+            Project senderProject = (sender as Button).DataContext as Project;
+
+            if (senderLawyer == null) return;
+
             bool doNotAddLawyer = false;
-            foreach (Lawyer lawyer in ((sender as Button).DataContext as Project).Lawyers) if (lawyer.Name == ((sender as Button).Tag as Lawyer).Name) doNotAddLawyer = true;
+            foreach (Lawyer lawyer in senderProject.Lawyers) if (lawyer.Name == senderLawyer.Name) doNotAddLawyer = true;
             if (!doNotAddLawyer)
             {
-                ((sender as Button).DataContext as Project).AddLawyer((sender as Button).Tag as Lawyer, 0);
-                //LawyerContext.UpdateLawyer((sender as Button).Tag as Lawyer);
-                //LawyerContext.UpdateProject((sender as Button).DataContext as Project);
+                (DataContext as LCViewModel).db.Add(senderProject.Lawyers, senderLawyer);
+                (DataContext as LCViewModel).db.Add(senderLawyer.LawyersProjects, new LawyersProject() { Name = senderProject.Name });
             }
             else MessageBox.Show("Этот юрист уже участвует в данном проекте");
-            
-        }
-
-        private void AddPartner_Click(object sender, RoutedEventArgs e)
-        {
-            Partner newPartner = new Partner("Без имени");
-            (DataContext as LCViewModel).AllPartners.Add(newPartner);
-            using (LawyerContext db = new LawyerContext()) 
-            {
-                db.Partners.Add(newPartner);
-                db.SaveChanges();
-            }
         }
 
         private void AddOriginatorToProject_Click(object sender, RoutedEventArgs e)
@@ -471,29 +437,52 @@ namespace LawCalculator_WPF
             ((sender as Button).DataContext as Project).ManagerVisibilityTrigger = Visibility.Visible;
         }
 
-        private void UploadFromSpreadsheetButton_Click(object sender, RoutedEventArgs e)
+        private void SaveProject_Click(object sender, RoutedEventArgs e)
         {
-            (DataContext as LCViewModel).GetInfoFromSpreadsheet(@"C:\Users\Никита\Desktop\Проекты\LawCalculator WPF\Движение по счетам_2020_с актами.xlsx", 0, 1, 2, true);
-            (DataContext as LCViewModel).GetInfoFromSpreadsheet(@"C:\Users\Никита\Desktop\Проекты\LawCalculator WPF\Движение по счетам_2020_2_квартал.xlsx", 1, 3, 4, false);
+            (DataContext as LCViewModel).db.Update((sender as Button).DataContext as Project);
         }
 
-        private void MakeAllPaymentsButton_Click(object sender, RoutedEventArgs e)
+        private void DeleteProject_Click(object sender, RoutedEventArgs e)
         {
-            foreach (Project project in (DataContext as LCViewModel).AllProjects) project.PayMoney();
+            (DataContext as LCViewModel).db.Remove((DataContext as LCViewModel).AllProjects, (sender as Button).DataContext as Project);
+        }
+        #endregion
+
+        #region Юристы
+        private void AddLawyer_Click(object sender, RoutedEventArgs e)
+        {
+            Lawyer newLawyer = new Lawyer("Без имени", 0);
+            (DataContext as LCViewModel).db.Add((DataContext as LCViewModel).AllLawyers, newLawyer);
         }
 
         private void SaveLawyer_Click(object sender, RoutedEventArgs e)
         {
-            LawyerContext.UpdateLawyer((sender as Button).DataContext as Lawyer);
+            (DataContext as LCViewModel).db.Update((sender as Button).DataContext as Lawyer);
         }
 
-        private void SaveProject_Click(object sender, RoutedEventArgs e)
+        private void DeleteLawyer_Click(object sender, RoutedEventArgs e)
         {
-            LawyerContext.UpdateProject((sender as Button).DataContext as Project);
-            foreach (Lawyer lawyer in ((sender as Button).DataContext as Project).Lawyers) LawyerContext.UpdateLawyer(lawyer);
-            LawyerContext.UpdatePartner(((sender as Button).DataContext as Project).OriginatingPartner);
-            LawyerContext.UpdatePartner(((sender as Button).DataContext as Project).ManagingPartner);
+            (DataContext as LCViewModel).db.Remove((DataContext as LCViewModel).AllLawyers, (sender as Button).DataContext as Lawyer);
         }
+        #endregion
+
+        #region Партнёры
+        private void AddPartner_Click(object sender, RoutedEventArgs e)
+        {
+            Partner newPartner = new Partner("Без имени");
+            (DataContext as LCViewModel).db.Add((DataContext as LCViewModel).AllPartners, newPartner);
+        }
+
+        private void SavePartner_Click(object sender, RoutedEventArgs e)
+        {
+            (DataContext as LCViewModel).db.Update((sender as Button).DataContext as Partner);
+        }
+
+        private void DeletePartner_Click(object sender, RoutedEventArgs e)
+        {
+            (DataContext as LCViewModel).db.Remove((DataContext as LCViewModel).AllPartners, (sender as Button).DataContext as Partner);
+        }
+        #endregion
 
         #endregion
     }

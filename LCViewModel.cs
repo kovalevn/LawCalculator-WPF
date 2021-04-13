@@ -15,65 +15,29 @@ namespace LawCalculator_WPF
         public ObservableCollection<Lawyer> AllLawyers { get; set; } = new ObservableCollection<Lawyer>();
         public ObservableCollection<Partner> AllPartners { get; set; } = new ObservableCollection<Partner>();
 
+        public LawyerContext db = new LawyerContext();
+
         public LCViewModel()
         {
-            Partner Kovalev = new Partner("Сергей Ковалев");
-            Partner Kislov = new Partner("Сергей Кислов");
-            Partner Tugushi = new Partner("Дмитрий Тугуши");
-            Lawyer Ivan = new Lawyer("Иван", 60000);
-            Lawyer Roman = new Lawyer("Роман", 80000);
-
             //Получаем курсы валют
             CurrencyConverter.Initialize();
+            
+            //Загружаем информацию из бд
+            db.Projects.Include("Lawyers").Include("Payments").Include("PayedPayments").Load();
+            AllProjects = db.Projects.Local;
 
-            //Заполняем коллекции юристов, проектов и партнёров из базы данных
-            using (LawyerContext db = new LawyerContext())
-            {
-                var lawyers = db.Lawyers;
-                var projects = db.Projects;
-                var partners = db.Partners;
+            db.Lawyers.Include("LawyersProjects").Include("LawyersProjects.Payments").Load();
+            AllLawyers = db.Lawyers.Local;
 
-                //Раcкомментить для создания юристов и партнёров после удаления датабазы
-                //lawyers.Add(Ivan);
-                //lawyers.Add(Roman);
-                //partners.Add(Kovalev);
-                //partners.Add(Kislov);
-                //partners.Add(Tugushi);
-                //db.SaveChanges();
-
-                foreach (Project project in projects)
-                {
-                    Project proj = db.Projects.Include("Lawyers").Include("Payments").Include("PayedPayments").Where(p => p.Name == project.Name).FirstOrDefault();
-                    AllProjects.Add(proj);
-                }
-
-                foreach (Lawyer lawyer in lawyers)
-                {
-                    Lawyer lwyr = db.Lawyers.Include("LawyersProjects").Include("LawyersProjects.Payments").Where(l => l.Name == lawyer.Name).FirstOrDefault();
-                    AllLawyers.Add(lwyr);
-                }
-
-                //db.Lawyers.Include("LawyersProjects").Include("LawyersProjects.Payments").Load();
-                //AllLawyers = db.Lawyers.Local;
-
-                foreach (Partner partner in partners)
-                {
-                    Partner prtnr = db.Partners.Include("LawyersProjects").Include("LawyersProjects.Payments").Where(p => p.Name == partner.Name).FirstOrDefault();
-                    AllPartners.Add(prtnr);
-                }
-            }
+            db.Partners.Include("LawyersProjects").Include("LawyersProjects.Payments").Load();
+            AllPartners = db.Partners.Local;
 
             //Выставляем начальную валюту для каждого проекта
             foreach (Project project in AllProjects) project.SetProjectCurrency();
-
-            //Сортируем проекты
-            AllProjects = new ObservableCollection<Project>(AllProjects.OrderBy(i => i));
         }
 
         public void GetInfoFromSpreadsheet(string sheetPath, int dollar, int euro, int rouble, bool dateFromActs)
         {
-            //var sheetAdress = new FileInfo(@"C:\Users\Никита\Desktop\Проекты\LawCalculator WPF\Движение по счетам_2020_.xlsx");
-            //var sheetAdress = new FileInfo(@"C:\Users\Никита\Desktop\Проекты\LawCalculator WPF\Движение по счетам_2020_с актами.xlsx");
             var sheetAdress = new FileInfo(sheetPath);
             using (var p = new ExcelPackage(sheetAdress))
             {

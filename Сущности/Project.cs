@@ -128,6 +128,9 @@ namespace LawCalculator_WPF
 
         public void PayMoney()
         {
+            //Эта переменная считает, скольким людям не выплатили процент. Если не выплатили никому -
+            //платёж не удаляется из коллекции платежей к выплате. Это временный костыль, потом нужно убрать
+            int percentsNotPayed = 0;
 
             if (OriginatingPartner == null || ManagingPartner == null)
             {
@@ -143,12 +146,13 @@ namespace LawCalculator_WPF
                 return;
             }
 
-            AddMoneyToLawyersProjects(OriginatingPartner, OriginatingPartnerPercent);
-            AddMoneyToLawyersProjects(ManagingPartner, ManagingPartnerPercent);
+            AddMoneyToLawyersProjects(OriginatingPartner, OriginatingPartnerPercent, ref percentsNotPayed);
+            AddMoneyToLawyersProjects(ManagingPartner, ManagingPartnerPercent, ref percentsNotPayed);
 
-            foreach (Lawyer lawyer in Lawyers) AddMoneyToLawyersProjects(lawyer);
+            foreach (Lawyer lawyer in Lawyers) AddMoneyToLawyersProjects(lawyer, ref percentsNotPayed);
 
             //Если у платежа статус "к уплате", то он был выплачен в данном методе, и мы убираем его в коллекцию выплаченных платежей
+            if (percentsNotPayed >= 2 + Lawyers.Count) return;
             foreach (Payment pay in paymentsToPay)
             {
                 PayedPayments.Add(pay);
@@ -166,7 +170,7 @@ namespace LawCalculator_WPF
             return moneyToAdd;
         }
 
-        private void AddMoneyToLawyersProjects(Partner lawyer, float percent)
+        private void AddMoneyToLawyersProjects(Partner lawyer, float percent, ref int percentsNotPayed)
         {
             LawyersProject thisProject = new LawyersProject();
             foreach (LawyersProject project in lawyer.LawyersProjects)
@@ -180,7 +184,8 @@ namespace LawCalculator_WPF
             //Для каждого вида валюты складываем все платежи c соответствующей валютой, умножаем на процент юриста и добавляем платёж
             if (percent <= 0)
             {
-                MessageBox.Show($"Партнёру {lawyer.Name} не указан процент. Для проведения выплаты укажите проценты всем юристам");
+                MessageBox.Show($"Партнёру {lawyer.Name} не указан процент.");
+                percentsNotPayed += 1;
                 return;
             }
             foreach (CurrencyType currency in Enum.GetValues(typeof(CurrencyType)))
@@ -196,7 +201,7 @@ namespace LawCalculator_WPF
             }
         }
 
-        private void AddMoneyToLawyersProjects(Lawyer lawyer)
+        private void AddMoneyToLawyersProjects(Lawyer lawyer, ref int percentsNotPayed)
         {
             LawyersProject thisProject = lawyer.LawyersProjects.Where(x => x.Name == Name).FirstOrDefault();
 
@@ -204,7 +209,8 @@ namespace LawCalculator_WPF
             //Для каждого вида валюты складываем все платежи c соответствующей валютой, умножаем на процент юриста и добавляем платёж
             if (thisProject.Percent <= 0)
             {
-                MessageBox.Show($"Юристу {lawyer.Name} не указан процент. Для проведения выплаты укажите проценты всем юристам");
+                MessageBox.Show($"Юристу {lawyer.Name} не указан процент.");
+                percentsNotPayed += 1;
                 return;
             }
             foreach (CurrencyType currency in Enum.GetValues(typeof(CurrencyType)))

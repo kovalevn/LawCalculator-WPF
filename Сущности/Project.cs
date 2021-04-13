@@ -154,13 +154,15 @@ namespace LawCalculator_WPF
                 PayedPayments.Add(pay);
                 Payments.Remove(pay);
             }
-            LawyerContext.UpdateProject(this);
+
         }
 
         public static double CountMoneyOfCurrency(ObservableCollection<Payment> payments, CurrencyType currencyType)
         {
             double moneyToAdd = 0;
-            if (payments?.Count > 0) foreach (Payment payment in payments) if (payment.Currency == currencyType && payment.ToPay) moneyToAdd += payment.Amount;
+            if (payments?.Count > 0) 
+                foreach (Payment payment in payments) 
+                    if (payment.Currency == currencyType && payment.ToPay) moneyToAdd += payment.Amount;
             return moneyToAdd;
         }
 
@@ -184,9 +186,14 @@ namespace LawCalculator_WPF
             foreach (CurrencyType currency in Enum.GetValues(typeof(CurrencyType)))
             {
                 double moneyToAdd = CountMoneyOfCurrency(Payments, currency);
-                if (moneyToAdd > 0) thisProject.Payments.Add(new Payment() { Amount = percent * moneyToAdd / 100, Date = DateTime.Today, Currency = currency, ProjectName = Name });
+                if (moneyToAdd > 0) thisProject.Payments.Add(new Payment()
+                {
+                    Amount = percent * moneyToAdd / 100, 
+                    Date = DateTime.Today, 
+                    Currency = currency, 
+                    ProjectName = Name 
+                });
             }
-            LawyerContext.UpdatePartner(lawyer);
         }
 
         private void AddMoneyToLawyersProjects(Lawyer lawyer)
@@ -203,46 +210,14 @@ namespace LawCalculator_WPF
             foreach (CurrencyType currency in Enum.GetValues(typeof(CurrencyType)))
             {
                 double moneyToAdd = CountMoneyOfCurrency(Payments, currency);
-                if (moneyToAdd > 0) thisProject.Payments.Add(new Payment() { Amount = thisProject.Percent * moneyToAdd / 100, Date = DateTime.Today, Currency = currency, ProjectName = Name });
+                if (moneyToAdd > 0) thisProject.Payments.Add(new Payment() 
+                { 
+                    Amount = thisProject.Percent * moneyToAdd / 100, 
+                    Date = DateTime.Today, 
+                    Currency = currency, 
+                    ProjectName = Name 
+                });
             }
-            LawyerContext.UpdateLawyer(lawyer);
-            //foreach (Payment payment in thisProject.Payments) MessageBox.Show($"{payment.Amount.ToString()} {payment.Currency} получил {lawyer.Name} по проекту {payment.ProjectName}");
-        }
-
-        public void AddMoney(int amount, CurrencyType currency)
-        {
-            Payment pay = new Payment() { Amount = amount, Date = DateTime.Today, Currency = currency };
-            //if (Payments.Count == 0) firstPayment = pay;
-            Payments.Add(pay);
-        }
-
-        public void AddMoney(int amount, CurrencyType currency, DateTime date)
-        {
-            Payment pay = new Payment() { Amount = amount, Date = date, Currency = currency };
-            Payments.Add(pay);
-        }
-
-        public void AddLawyer(Lawyer lawyer, float success)
-        {
-            //lawyer.Projects.Add(this.Name, new SuccessAndProject(success, this)); //(new Project(name, OriginatingPartner, ManagingPartner, isSuccess) { lawyersPercentInProject = success });
-            lawyer.LawyersProjects.Add(new LawyersProject(Name) { Percent = success });
-            Lawyers.Add(lawyer);
-            LawyerContext.UpdateLawyer(lawyer);
-            LawyerContext.UpdateProject(this);
-        }
-
-        public void RemoveLawyer(Lawyer lawyer)
-        {
-            //lawyer.Projects.Remove(this.Name);
-            foreach (LawyersProject project in lawyer.LawyersProjects)
-            {
-                if (project.Name == Name)
-                {
-                    lawyer.LawyersProjects.Remove(project);
-                    return;
-                }
-            }
-            Lawyers.Remove(lawyer);
         }
 
         public void AddPartner(Partner partner)
@@ -251,32 +226,7 @@ namespace LawCalculator_WPF
             partner.LawyersProjects.Add(new LawyersProject(Name));
         }
 
-        public void RemovePartner(Partner partner)
-        {
-            foreach (LawyersProject project in partner.LawyersProjects)
-            {
-                if (project.Name == Name)
-                {
-                    partner.LawyersProjects.Remove(project);
-                    return;
-                }
-            }
-        }
-
-        public void ShowPaymentsAtDate(string date)
-        {
-            bool anyPayments = false;
-            foreach (Payment payment in Payments)
-            {
-                if (payment.Date.ToShortDateString() == date)
-                {
-                    Console.WriteLine(payment.Amount);
-                    anyPayments = true;
-                }
-            }
-            if (!anyPayments) Console.WriteLine("Платежей в эту дату не найдено");
-        }
-
+        #region Реализация методов интерфейсов
         public int CompareTo(object obj)
         {
             return Name.CompareTo(((Project)obj).Name);
@@ -304,5 +254,6 @@ namespace LawCalculator_WPF
         {
             return Id;
         }
+        #endregion
     }
 }

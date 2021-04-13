@@ -13,6 +13,9 @@ namespace LawCalculator_WPF
         public int Salary { get; set; }
         public bool IsCounselor;
         public ICollection<Project> Project { get; set; }
+
+        //Добавить коллекцию <Project, процент> и <Project, Payments> - так не нужен будет отдельный класс LawyerProject
+
         public ObservableCollection<LawyersProject> LawyersProjects { get; set; } = new ObservableCollection<LawyersProject>();
 
         public Lawyer(string name, int salary)

@@ -5,7 +5,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:LawCalculator_WPF"
-        xmlns:System="clr-namespace:System;assembly=mscorlib"
+        xmlns:System="clr-namespace:System;assembly=mscorlib" 
+        xmlns:scm="clr-namespace:System.ComponentModel;assembly=WindowsBase"
         mc:Ignorable="d"
         Title="LawCalculator" Height="700" Width="450" WindowStartupLocation="CenterScreen">
     <Window.Resources>
@@ -16,11 +17,18 @@
         <local:ReverseVisibilityConverter x:Key="reverseVisibilityConverter"/>
         <local:NumberToBoolConverter x:Key="numberToBoolConverter" Inverted="False"/>
         <local:NumberToBoolConverter x:Key="numberToBoolConverterInverted" Inverted="True"/>
+        
         <ObjectDataProvider x:Key="currencyType" MethodName="GetValues" ObjectType="{x:Type System:Enum}">
             <ObjectDataProvider.MethodParameters>
                 <x:Type TypeName="local:CurrencyType"/>
             </ObjectDataProvider.MethodParameters>
         </ObjectDataProvider>
+
+        <CollectionViewSource Source="{Binding AllProjects}" x:Key="AllProjectsSorted">
+            <CollectionViewSource.SortDescriptions>
+                <scm:SortDescription PropertyName="Name"/>
+            </CollectionViewSource.SortDescriptions>
+        </CollectionViewSource>
 
         <Style TargetType="Expander">
             <EventSetter Event="Expanded" Handler="Expander_Expanded"/>
@@ -85,7 +93,7 @@
                                 <Button x:Name="UploadFromSpreadsheetButton" Content="Выгрузить из таблицы" Click="UploadFromSpreadsheetButton_Click"/>
                                 <Button x:Name="MakeAllPaymentsButton" Content="Произвести все выплаты" Click="MakeAllPaymentsButton_Click"/>
                             </UniformGrid>
-                            <ItemsControl x:Name="ProjectsControl" ItemsSource="{Binding AllProjects}">
+                            <ItemsControl x:Name="ProjectsControl" ItemsSource="{Binding Source={StaticResource AllProjectsSorted}}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
                                         <StackPanel/>
@@ -215,6 +223,7 @@
                                                         </ItemsControl.ItemTemplate>
                                                     </ItemsControl>
                                                     <Button x:Name="SaveProject" Content="Сохранить" Click="SaveProject_Click"/>
+                                                    <Button x:Name="DeleteProject" Content="Удалить" Click="DeleteProject_Click"/>
                                                 </StackPanel>
                                             </GroupBox>
                                         </Expander>
@@ -306,6 +315,7 @@
                                                     </UniformGrid>
 
                                                     <Button x:Name="SaveLawyer" Content="Сохранить" Click="SaveLawyer_Click"/>
+                                                    <Button x:Name="DeleteLawyer" Content="Удалить" Click="DeleteLawyer_Click"/>
                                                 </StackPanel>
                                             </GroupBox>
                                         </Expander>
@@ -409,6 +419,8 @@
                                                             </TextBox.Text>
                                                         </TextBox>
                                                     </UniformGrid>
+                                                    <Button x:Name="SavePartner" Content="Сохранить" Click="SavePartner_Click"/>
+                                                    <Button x:Name="DeletePartner" Content="Удалить" Click="DeletePartner_Click"/>
                                                 </StackPanel>
                                             </GroupBox>
                                         </Expander>

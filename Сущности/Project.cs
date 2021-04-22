@@ -43,37 +43,21 @@ namespace LawCalculator_WPF
         public ObservableCollection<Lawyer> Lawyers { get; set; } = new ObservableCollection<Lawyer>();
         public ObservableCollection<Payment> Payments { get; set; } = new ObservableCollection<Payment>();
         public ObservableCollection<Payment> PayedPayments { get; set; } = new ObservableCollection<Payment>();
-        //private Payment firstPayment;
-
-        private Visibility originatorVisibilityTrigger;
-        public Visibility OriginatorVisibilityTrigger
-        {
-            get
-            {
-                return originatorVisibilityTrigger;
-            }
-            set
-            {
-                originatorVisibilityTrigger = value;
-                OnPropertyChanged(nameof(OriginatorVisibilityTrigger));
-            }
-        }
-
-        private Visibility managerVisibilityTrigger;
-        public Visibility ManagerVisibilityTrigger
-        {
-            get
-            {
-                return managerVisibilityTrigger;
-            }
-            set
-            {
-                managerVisibilityTrigger = value;
-                OnPropertyChanged(nameof(ManagerVisibilityTrigger));
-            }
-        }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        #region Свойства - триггеры видимости элементов
+
+        public Visibility OriginatorVisibilityTrigger => OriginatingPartner == null ? Visibility.Collapsed : Visibility.Visible;
+        public Visibility OriginatorInverseVisibilityTrigger => OriginatingPartner == null ? Visibility.Visible : Visibility.Collapsed;
+
+        public Visibility ManagerVisibilityTrigger => ManagingPartner == null ? Visibility.Collapsed : Visibility.Visible;
+        public Visibility ManagerInverseVisibilityTrigger => ManagingPartner == null ? Visibility.Visible : Visibility.Collapsed;
+
+        public Visibility LawyersVisibilityTrigger => Lawyers.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        public Visibility LawyersInverseVisibilityTrigger => Lawyers.Count > 0 ? Visibility.Collapsed : Visibility.Visible;
+
+        #endregion
 
         //Как будем проверять, что надо выплатить в этом квартале: проверяем все платежи, если самый ранний платёж поступил за последние 
         //три месяца - переносим выплату на следующий, если от трёх до шести - выплачиваем все поступившие суммы, если платёж поступил более 
@@ -91,9 +75,6 @@ namespace LawCalculator_WPF
             ManagingPartner = manager;
             isSuccess = sucsess;
             ManagingPartnerPercent = isSuccess ? 40 : 25;
-
-            OriginatorVisibilityTrigger = Visibility.Collapsed;
-            ManagerVisibilityTrigger = Visibility.Collapsed;
         }
 
         public Project() { }
@@ -103,9 +84,6 @@ namespace LawCalculator_WPF
             this.Name = name;
             isSuccess = sucsess;
             ManagingPartnerPercent = isSuccess ? 40 : 25;
-
-            OriginatorVisibilityTrigger = Visibility.Collapsed;
-            ManagerVisibilityTrigger = Visibility.Collapsed;
         }
 
         #endregion
@@ -226,7 +204,7 @@ namespace LawCalculator_WPF
             }
         }
 
-        public void AddPartner(Partner partner)
+        public void AddProjectToPartner(Partner partner)
         {
             if (OriginatingPartner == partner && ManagingPartner == partner) return;
             partner.LawyersProjects.Add(new LawyersProject(Name));
@@ -238,12 +216,9 @@ namespace LawCalculator_WPF
             return Name.CompareTo(((Project)obj).Name);
         }
 
-        protected void OnPropertyChanged(string name)
+        public void OnPropertyChanged(string name)
         {
-            if (PropertyChanged != null)
-            {
-                PropertyChanged(this, new PropertyChangedEventArgs(name));
-            }
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
         }
 
         public bool Equals(Project other)

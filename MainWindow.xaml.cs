@@ -1,4 +1,6 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.ComponentModel;
+using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -14,7 +16,7 @@ namespace LawCalculator_WPF
     {
         public MainWindow()
         {
-            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
             InitializeComponent();
             DataContext = new LCViewModel();
 
@@ -382,7 +384,7 @@ namespace LawCalculator_WPF
             (DataContext as LCViewModel).GetInfoFromSpreadsheet(@"C:\Users\Никита\Desktop\Проекты\LawCalculator WPF\Движение по счетам_2020_2_квартал.xlsx", 1, 3, 4, false);
         }
 
-        private void makePaymentsButton_Click(object sender, RoutedEventArgs e)
+        private void MakePaymentsButton_Click(object sender, RoutedEventArgs e)
         {
             Project senderProject = (sender as Button).DataContext as Project;
 
@@ -419,22 +421,31 @@ namespace LawCalculator_WPF
                 (DataContext as LCViewModel).db.Add(senderLawyer.LawyersProjects, new LawyersProject() { Name = senderProject.Name });
             }
             else MessageBox.Show("Этот юрист уже участвует в данном проекте");
+
+            senderProject.OnPropertyChanged(nameof(senderProject.LawyersVisibilityTrigger));
+            senderProject.OnPropertyChanged(nameof(senderProject.LawyersInverseVisibilityTrigger));
         }
 
         private void AddOriginatorToProject_Click(object sender, RoutedEventArgs e)
         {
-            ((sender as Button).DataContext as Project).OriginatingPartner = ((sender as Button).Tag as Partner);
-            ((sender as Button).DataContext as Project).AddPartner((sender as Button).Tag as Partner);
-            (sender as Button).Visibility = Visibility.Collapsed;
-            ((sender as Button).DataContext as Project).OriginatorVisibilityTrigger = Visibility.Visible;
+            Project senderProject = (sender as Button).DataContext as Project;
+
+            senderProject.OriginatingPartner = (sender as Button).Tag as Partner;
+            senderProject.AddProjectToPartner((sender as Button).Tag as Partner);
+
+            senderProject.OnPropertyChanged(nameof(senderProject.OriginatorVisibilityTrigger));
+            senderProject.OnPropertyChanged(nameof(senderProject.OriginatorInverseVisibilityTrigger));
         }
 
         private void AddManagerToProject_Click(object sender, RoutedEventArgs e)
         {
-            ((sender as Button).DataContext as Project).ManagingPartner = ((sender as Button).Tag as Partner);
-            ((sender as Button).DataContext as Project).AddPartner((sender as Button).Tag as Partner);
-            (sender as Button).Visibility = Visibility.Collapsed;
-            ((sender as Button).DataContext as Project).ManagerVisibilityTrigger = Visibility.Visible;
+            Project senderProject = (sender as Button).DataContext as Project;
+
+            senderProject.ManagingPartner = (sender as Button).Tag as Partner;
+            senderProject.AddProjectToPartner((sender as Button).Tag as Partner);
+
+            senderProject.OnPropertyChanged(nameof(senderProject.ManagerVisibilityTrigger));
+            senderProject.OnPropertyChanged(nameof(senderProject.ManagerInverseVisibilityTrigger));
         }
 
         private void SaveProject_Click(object sender, RoutedEventArgs e)
@@ -444,7 +455,15 @@ namespace LawCalculator_WPF
 
         private void DeleteProject_Click(object sender, RoutedEventArgs e)
         {
-            (DataContext as LCViewModel).db.Remove((DataContext as LCViewModel).AllProjects, (sender as Button).DataContext as Project);
+            Project senderProject = (sender as Button).DataContext as Project;
+
+            foreach(Lawyer lawyer in senderProject.Lawyers)
+            {
+                var projToRemove = lawyer.LawyersProjects.Where(l => l.Name == senderProject.Name).First();
+                (DataContext as LCViewModel).db.Remove(lawyer.LawyersProjects, projToRemove);
+            }
+
+            (DataContext as LCViewModel).db.Remove((DataContext as LCViewModel).AllProjects, senderProject);
         }
         #endregion
 

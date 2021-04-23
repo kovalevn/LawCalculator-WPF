@@ -11,12 +11,24 @@ namespace LawCalculator_WPF
     {
         public int Id { get; set; }
         public double Amount { get; set; }
-        public DateTime Date { get => date; set { DateString = value.ToShortDateString(); date = value; } }
-        private DateTime date;
-        public string DateString { get; private set; }
+        public DateTime Date { get; set; }
+
+        public string DateString
+        { 
+            get 
+            {
+                return Date.ToShortDateString();
+            }
+        }
         public CurrencyType Currency { get; set; }
         public string ProjectName { get; set; }
-        public bool ToPay { get; set; } = false;
+        public bool ToPay 
+        {
+            get
+            {
+                return DateTime.Compare(Date, DateTime.Today.AddMonths(-3)) <= 0 && !Payed;
+            }
+        }
         public bool Payed { get; set; } = false;
 
         public bool Equals([AllowNull] Payment other)

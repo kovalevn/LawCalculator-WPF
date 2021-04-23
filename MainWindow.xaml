@@ -85,6 +85,7 @@
             <Setter Property="Height" Value="20"/>
         </Style>
         <!--#endregion-->
+        
     </Window.Resources>
     <Grid>
         <TabControl>

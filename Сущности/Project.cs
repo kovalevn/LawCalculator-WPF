@@ -90,18 +90,7 @@ namespace LawCalculator_WPF
 
         public void SetProjectCurrency()
         {
-            bool setCurrency = true;
-            foreach (Payment pay in Payments)
-            {
-                if (pay.ToPay)
-                {
-                    if (setCurrency)
-                    {
-                        ProjectCurrency = pay.Currency;
-                        setCurrency = false;
-                    }
-                }
-            }
+            ProjectCurrency = Payments.Where(p => p.ToPay).FirstOrDefault().Currency;
         }
 
         public void PayMoney()

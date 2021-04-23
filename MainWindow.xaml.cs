@@ -418,7 +418,7 @@ namespace LawCalculator_WPF
             if (!doNotAddLawyer)
             {
                 (DataContext as LCViewModel).db.Add(senderProject.Lawyers, senderLawyer);
-                (DataContext as LCViewModel).db.Add(senderLawyer.LawyersProjects, new LawyersProject() { Name = senderProject.Name });
+                (DataContext as LCViewModel).db.Add(senderLawyer.LawyersProjects, new LawyersProject(senderProject));
             }
             else MessageBox.Show("Этот юрист уже участвует в данном проекте");
 
@@ -459,7 +459,7 @@ namespace LawCalculator_WPF
 
             foreach(Lawyer lawyer in senderProject.Lawyers)
             {
-                var projToRemove = lawyer.LawyersProjects.Where(l => l.Name == senderProject.Name).First();
+                var projToRemove = lawyer.LawyersProjects.Where(l => l.Project == senderProject).First();
                 (DataContext as LCViewModel).db.Remove(lawyer.LawyersProjects, projToRemove);
             }
 

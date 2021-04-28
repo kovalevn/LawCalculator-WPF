@@ -10,6 +10,8 @@
         mc:Ignorable="d"
         Title="LawCalculator" Height="700" Width="450" WindowStartupLocation="CenterScreen">
     <Window.Resources>
+        
+        <!--#region Конвертеры-->
         <local:PaymentsSumConverter x:Key="paymentsSumConverter"/>
         <local:PartnerPaymentsSumConverter x:Key="partnerPaymentsSumConverter"/>
         <local:PaymentsOnDateConverter x:Key="paymentsOnDateConverter"/>
@@ -17,6 +19,7 @@
         <local:ReverseVisibilityConverter x:Key="reverseVisibilityConverter"/>
         <local:NumberToBoolConverter x:Key="numberToBoolConverter" Inverted="False"/>
         <local:NumberToBoolConverter x:Key="numberToBoolConverterInverted" Inverted="True"/>
+        <!--#endregion-->
         
         <ObjectDataProvider x:Key="currencyType" MethodName="GetValues" ObjectType="{x:Type System:Enum}">
             <ObjectDataProvider.MethodParameters>
@@ -30,6 +33,7 @@
             </CollectionViewSource.SortDescriptions>
         </CollectionViewSource>
 
+        <!--#region Стили-->
         <Style TargetType="Expander">
             <EventSetter Event="Expanded" Handler="Expander_Expanded"/>
         </Style>
@@ -80,6 +84,8 @@
             <Setter Property="Width" Value="30"/>
             <Setter Property="Height" Value="20"/>
         </Style>
+        <!--#endregion-->
+        
     </Window.Resources>
     <Grid>
         <TabControl>
@@ -93,6 +99,7 @@
                                 <Button x:Name="UploadFromSpreadsheetButton" Content="Выгрузить из таблицы" Click="UploadFromSpreadsheetButton_Click"/>
                                 <Button x:Name="MakeAllPaymentsButton" Content="Произвести все выплаты" Click="MakeAllPaymentsButton_Click"/>
                             </UniformGrid>
+                            <!--#region Проект -->
                             <ItemsControl x:Name="ProjectsControl" ItemsSource="{Binding Source={StaticResource AllProjectsSorted}}">
                                 <ItemsControl.ItemsPanel>
                                     <ItemsPanelTemplate>
@@ -106,7 +113,7 @@
                                                 <StackPanel x:Name="newProjectPanel" HorizontalAlignment="Left">
                                                     <UniformGrid Columns="2">
                                                         <Button Content="Редактировать" HorizontalAlignment="Left"/>
-                                                        <Button Name="makePaymentsButton" Content="Произвести выплату" HorizontalAlignment="Right" Click="makePaymentsButton_Click"/>
+                                                        <Button Name="makePaymentsButton" Content="Произвести выплату" HorizontalAlignment="Right" Click="MakePaymentsButton_Click"/>
                                                     </UniformGrid>
                                                     <DockPanel Margin="0,0,0,20">
                                                         <Label Content="Валюта проекта:" DockPanel.Dock="Left"/>
@@ -118,10 +125,9 @@
                                                         <Label Content="Originating Partner"/>
                                                         <Label Content="Проценты"/>
                                                         <Label Content="К выплате"/>
-                                                        <ComboBox x:Name="originatingPartnerBox" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.AllPartners}" DisplayMemberPath="Name" Visibility="{Binding ElementName=saveOrigPartButton, Path=Visibility}"/>
+                                                        <ComboBox x:Name="originatingPartnerBox" ItemsSource="{Binding DataContext.AllPartners, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" DisplayMemberPath="Name" Visibility="{Binding OriginatorInverseVisibilityTrigger}"/>
                                                         <TextBox x:Name="originatingPartnerTextBox" Text="{Binding OriginatingPartner.Name}" IsReadOnly="True" Visibility="{Binding OriginatorVisibilityTrigger}"/>
                                                         <TextBox x:Name="originatingPartnerPercent" PreviewTextInput="NumberValidationTextBox" Text="{Binding OriginatingPartnerPercent, Mode=TwoWay}" MaxLength="2"/>
-                                                        <!--<ComboBox ItemsSource="{Binding OriginatorMoney}" SelectedIndex="{Binding ElementName=projectCurrency, Path=SelectedIndex, Mode=OneWay}"/>-->
                                                         <TextBox MinWidth="20" IsReadOnly="True">
                                                             <TextBox.Text>
                                                                 <MultiBinding Converter="{StaticResource generalPaymentConverter}">
@@ -132,8 +138,7 @@
                                                                 </MultiBinding>
                                                             </TextBox.Text>
                                                         </TextBox>
-                                                        <Button x:Name="saveOrigPartButton" Click="AddOriginatorToProject_Click" Tag="{Binding ElementName=originatingPartnerBox, Path=SelectedItem}" Content="OK" Visibility="{Binding ElementName=originatingPartnerTextBox, Path=Visibility, Converter={StaticResource reverseVisibilityConverter}}"/>
-                                                        <!--<Button x:Name="editOrigPartButton" Click="EditOriginator_Click" Content="Изменить" Tag="{Binding ElementName=originatingPartnerBox, Path=SelectedItem}" Visibility="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.OriginatorVisibilityTrigger}"/>-->
+                                                        <Button x:Name="saveOrigPartButton" Click="AddOriginatorToProject_Click" Tag="{Binding ElementName=originatingPartnerBox, Path=SelectedItem}" Content="OK" Visibility="{Binding OriginatorInverseVisibilityTrigger}"/>
                                                     </UniformGrid>
 
                                                     <TextBox Text="Managing Partner" Style="{StaticResource Headers}"/>
@@ -141,7 +146,7 @@
                                                         <Label Content="Managing Partner"/>
                                                         <Label Content="Проценты"/>
                                                         <Label Content="К выплате"/>
-                                                        <ComboBox x:Name="managingPartnerBox" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.AllPartners}" DisplayMemberPath="Name" Visibility="{Binding ElementName=saveManagPartButton, Path=Visibility}"/>
+                                                        <ComboBox x:Name="managingPartnerBox" ItemsSource="{Binding DataContext.AllPartners, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" DisplayMemberPath="Name" Visibility="{Binding ManagerInverseVisibilityTrigger}"/>
                                                         <TextBox x:Name="managingPartnerTextBox" Text="{Binding ManagingPartner.Name}" IsReadOnly="True" Visibility="{Binding ManagerVisibilityTrigger}"/>
                                                         <TextBox x:Name="managingPartnerPercent" PreviewTextInput="NumberValidationTextBox" Text="{Binding ManagingPartnerPercent, Mode=TwoWay}" MaxLength="2"/>
                                                         <!--<ComboBox ItemsSource="{Binding ManagerMoney}" SelectedIndex="{Binding ElementName=projectCurrency, Path=SelectedIndex, Mode=OneWay}"/>-->
@@ -155,7 +160,7 @@
                                                                 </MultiBinding>
                                                             </TextBox.Text>
                                                         </TextBox>
-                                                        <Button x:Name="saveManagPartButton" Click="AddManagerToProject_Click" Content="ОК" Tag="{Binding ElementName=managingPartnerBox, Path=SelectedItem}" Visibility="{Binding ElementName=managingPartnerTextBox, Path=Visibility, Converter={StaticResource reverseVisibilityConverter}}"/>
+                                                        <Button x:Name="saveManagPartButton" Click="AddManagerToProject_Click" Content="ОК" Tag="{Binding ElementName=managingPartnerBox, Path=SelectedItem}" Visibility="{Binding ManagerInverseVisibilityTrigger}"/>
                                                     </UniformGrid>
 
                                                     <TextBox Text="Юристы" Style="{StaticResource Headers}"/>
@@ -164,8 +169,8 @@
                                                         <Label Content="Проценты"/>
                                                         <Label Content="К выплате"/>
                                                     </UniformGrid>
-                                                    <Label Content="В проект не добавлено юристов" Visibility="{Binding Lawyers.Count, Converter={StaticResource numberToBoolConverterInverted}}"/>
-                                                    <ItemsControl ItemsSource="{Binding Lawyers}" Visibility="{Binding Lawyers.Count, Converter={StaticResource numberToBoolConverter}}">
+                                                    <Label Content="В проект не добавлено юристов" Visibility="{Binding LawyersInverseVisibilityTrigger}"/>
+                                                    <ItemsControl ItemsSource="{Binding Lawyers}" Visibility="{Binding LawyersVisibilityTrigger}">
                                                         <ItemsControl.ItemTemplate>
                                                             <DataTemplate>
                                                                 <UniformGrid Columns="3">
@@ -173,7 +178,7 @@
                                                                         <local:LawyerPercentConverter x:Key="lawyerPercentConverter"/>
                                                                     </UniformGrid.Resources>
                                                                     <TextBox Text="{Binding Name}" IsReadOnly="True"/>
-                                                                    <ComboBox IsEditable="True" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.AllLawyers}" DisplayMemberPath="Name" Visibility="Collapsed"/>
+                                                                    <!--<ComboBox IsEditable="True" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.AllLawyers}" DisplayMemberPath="Name" Visibility="Collapsed"/>-->
                                                                     <TextBox x:Name="lawyerPercent" MinWidth="20" PreviewTextInput="NumberValidationTextBox" MaxLength="2">
                                                                         <TextBox.Text>
                                                                             <MultiBinding Converter="{StaticResource lawyerPercentConverter}">
@@ -200,7 +205,7 @@
                                                     <GroupBox Margin="0,10,0,0">
                                                         <DockPanel Margin="0,5,0,5">
                                                             <Label Content="Добавить юриста:" DockPanel.Dock="Left"/>
-                                                            <ComboBox x:Name="AddLawyerToProjectBox" ItemsSource="{Binding RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}, Path=DataContext.AllLawyers}" IsEditable="True" DisplayMemberPath="Name" SelectedIndex="0" DockPanel.Dock="Left"/>
+                                                            <ComboBox x:Name="AddLawyerToProjectBox" ItemsSource="{Binding DataContext.AllLawyers, RelativeSource={RelativeSource AncestorType={x:Type Window}}}" IsEditable="True" DisplayMemberPath="Name" SelectedIndex="0" DockPanel.Dock="Left"/>
                                                             <Button Tag="{Binding ElementName=AddLawyerToProjectBox, Path=SelectedItem}" Content="Добавить" Click="AddLawyerToProject_Click" DockPanel.Dock="Right"/>
                                                         </DockPanel>
                                                     </GroupBox>
@@ -230,6 +235,7 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+                            <!--#endregion-->
                         </StackPanel>
                     </ScrollViewer>
                 </TabItem.Content>

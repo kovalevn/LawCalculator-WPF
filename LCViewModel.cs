@@ -83,8 +83,6 @@ namespace LawCalculator_WPF
                                     Date = date,
                                     ProjectName = projName 
                                 };
-                                //Добавить тут давность платежей, не учитываем те, которые пришли раньше, чем 3 месяца до сегодняшней даты, а также те, что старше Н месяцев
-                                pay.ToPay = DateTime.Compare(pay.Date, DateTime.Today.AddMonths(-3)) <= 0 && !pay.Payed;
                                 Project newProj = new Project(projName, false);
                                 foreach (Project proj in AllProjects)
                                 {

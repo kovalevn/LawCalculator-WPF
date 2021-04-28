@@ -90,7 +90,9 @@ namespace LawCalculator_WPF
 
         public void SetProjectCurrency()
         {
-            ProjectCurrency = Payments.Where(p => p.ToPay).FirstOrDefault().Currency;
+            var paymentsToPay = Payments.Where(p => p.ToPay);
+            if (paymentsToPay.Any())
+                ProjectCurrency = paymentsToPay.FirstOrDefault().Currency;
         }
 
         public void PayMoney()
@@ -142,7 +144,7 @@ namespace LawCalculator_WPF
             LawyersProject thisProject = new LawyersProject();
             foreach (LawyersProject project in lawyer.LawyersProjects)
             {
-                if (project.Name == Name)
+                if (project.Project == this)
                 {
                     thisProject = project;
                 }
@@ -170,7 +172,7 @@ namespace LawCalculator_WPF
 
         private void AddMoneyToLawyersProjects(Lawyer lawyer, ref int percentsNotPayed)
         {
-            LawyersProject thisProject = lawyer.LawyersProjects.Where(x => x.Name == Name).FirstOrDefault();
+            LawyersProject thisProject = lawyer.LawyersProjects.Where(x => x.Project == this).FirstOrDefault();
 
             //Здесь добавляем один пэймент за каждую валюту, размера thisProject.Percent * Payment.Amount каждого вида валюты, дата - сегодняшний день
             //Для каждого вида валюты складываем все платежи c соответствующей валютой, умножаем на процент юриста и добавляем платёж
@@ -196,7 +198,7 @@ namespace LawCalculator_WPF
         public void AddProjectToPartner(Partner partner)
         {
             if (OriginatingPartner == partner && ManagingPartner == partner) return;
-            partner.LawyersProjects.Add(new LawyersProject(Name));
+            partner.LawyersProjects.Add(new LawyersProject(this));
         }
 
         #region Реализация методов интерфейсов

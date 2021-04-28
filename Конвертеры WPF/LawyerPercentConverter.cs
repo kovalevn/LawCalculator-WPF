@@ -13,7 +13,7 @@ namespace LawCalculator_WPF
         LawyersProject proj = new LawyersProject();
         public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
         {
-            foreach (LawyersProject project in (values[0] as ObservableCollection<LawyersProject>)) if (project.Name == (values[1] as Project).Name) proj = project;
+            foreach (LawyersProject project in (values[0] as ObservableCollection<LawyersProject>)) if (project.Project == (values[1] as Project)) proj = project;
             return proj.Percent.ToString();
         }
 

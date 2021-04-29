@@ -83,7 +83,7 @@ namespace LawCalculator_WPF
                                     Date = date,
                                     ProjectName = projName 
                                 };
-                                Project newProj = new Project(projName, false);
+                                Project newProj = new Project(projName);
                                 foreach (Project proj in AllProjects)
                                 {
                                     if (proj.Name == projName)

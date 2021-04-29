@@ -39,7 +39,6 @@ namespace LawCalculator_WPF
             } 
         }
         public int ManagingPartnerPercent { get; set; }
-        public bool isSuccess;
         public ObservableCollection<Lawyer> Lawyers { get; set; } = new ObservableCollection<Lawyer>();
         public ObservableCollection<Payment> Payments { get; set; } = new ObservableCollection<Payment>();
         public ObservableCollection<Payment> PayedPayments { get; set; } = new ObservableCollection<Payment>();
@@ -68,22 +67,11 @@ namespace LawCalculator_WPF
 
         #region Конструкторы
 
-        public Project(string name, Partner originator, Partner manager, bool sucsess)
-        {
-            this.Name = name;
-            OriginatingPartner = originator;
-            ManagingPartner = manager;
-            isSuccess = sucsess;
-            ManagingPartnerPercent = isSuccess ? 40 : 25;
-        }
-
         public Project() { }
 
-        public Project(string name, bool sucsess) 
+        public Project(string name) 
         {
             this.Name = name;
-            isSuccess = sucsess;
-            ManagingPartnerPercent = isSuccess ? 40 : 25;
         }
 
         #endregion

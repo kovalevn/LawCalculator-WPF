@@ -16,7 +16,6 @@
         <local:PartnerPaymentsSumConverter x:Key="partnerPaymentsSumConverter"/>
         <local:PaymentsOnDateConverter x:Key="paymentsOnDateConverter"/>
         <local:GeneralPaymentConverter x:Key="generalPaymentConverter"/>
-        <local:ReverseVisibilityConverter x:Key="reverseVisibilityConverter"/>
         <local:NumberToBoolConverter x:Key="numberToBoolConverter" Inverted="False"/>
         <local:NumberToBoolConverter x:Key="numberToBoolConverterInverted" Inverted="True"/>
         <!--#endregion-->
